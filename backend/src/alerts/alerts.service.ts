@@ -45,7 +45,8 @@ export class AlertsService {
       
       if (!oldAlert || 
           oldAlert.state !== newAlert.state || 
-          oldAlert.newStateDate !== newAlert.newStateDate) {
+          oldAlert.newStateDate !== newAlert.newStateDate ||
+          oldAlert.isSilenced !== newAlert.isSilenced) {
         return true;
       }
     }

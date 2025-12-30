@@ -43,7 +43,7 @@
             :title="showFilter ? 'Hide filter' : 'Show filter'"
           >
             <i class="pi pi-filter"></i>
-            <span class="filter-badge" v-if="selectedStates.length < 5">{{ selectedStates.length }}</span>
+            <span class="filter-badge" v-if="selectedStates.length < 5 || !showSilenced">{{ selectedStates.length }}{{ !showSilenced ? '+' : '' }}</span>
           </button>
           <div v-if="showFilter" class="filter-dropdown">
             <MultiSelect
@@ -63,6 +63,12 @@
                 </div>
               </template>
             </MultiSelect>
+            <div class="silence-filter">
+              <label class="silence-toggle">
+                <input type="checkbox" v-model="showSilenced" />
+                <span>Show silenced alerts</span>
+              </label>
+            </div>
           </div>
         </div>
         <div class="size-control">
@@ -165,6 +171,7 @@ interface GrafanaAlert {
   url: string
   ruleGroup: string
   labels?: Record<string, string>
+  isSilenced?: boolean
 }
 
 const alerts = ref<GrafanaAlert[]>([])
@@ -176,6 +183,7 @@ const viewMode = ref<'compact' | 'grid'>('compact')
 const selectedStates = ref<string[]>(['alerting', 'pending', 'no_data', 'paused', 'ok'])
 const showFilter = ref(false)
 const fontSize = ref(2)
+const showSilenced = ref(true)
 
 const stateOptions = [
   { label: 'Alerting', value: 'alerting', icon: 'pi pi-exclamation-triangle', color: '#f44336' },
@@ -191,6 +199,7 @@ const sortedAlerts = computed(() => {
   const stateOrder = { alerting: 0, pending: 1, no_data: 2, paused: 3, ok: 4 }
   return [...alerts.value]
     .filter(alert => selectedStates.value.includes(alert.state))
+    .filter(alert => showSilenced.value || !alert.isSilenced)
     .sort((a, b) => stateOrder[a.state] - stateOrder[b.state])
 })
 
@@ -352,6 +361,32 @@ onUnmounted(() => {
 
 .filter-option i {
   font-size: 1rem;
+}
+
+.silence-filter {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.silence-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.silence-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: #64b5f6;
+}
+
+.silence-toggle:hover {
+  color: #fff;
 }
 
 .size-control {

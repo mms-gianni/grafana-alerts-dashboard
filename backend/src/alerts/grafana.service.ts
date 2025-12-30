@@ -31,6 +31,23 @@ export interface DisplayAlert {
   folderUID: string;
   labels: Record<string, string>;
   annotations: Record<string, string>;
+  isSilenced?: boolean;
+}
+
+export interface GrafanaSilence {
+  id: string;
+  matchers: Array<{
+    name: string;
+    value: string;
+    isRegex: boolean;
+  }>;
+  startsAt: string;
+  endsAt: string;
+  createdBy: string;
+  comment: string;
+  status: {
+    state: string;
+  };
 }
 
 @Injectable()
@@ -80,18 +97,80 @@ export class GrafanaService {
     };
   }
 
+  async getSilences(): Promise<GrafanaSilence[]> {
+    const endpoint = '/api/alertmanager/grafana/api/v2/silences';
+    const fullUrl = `${this.grafanaUrl}${endpoint}`;
+    
+    try {
+      this.logger.debug(`Fetching silences from: ${fullUrl}`);
+      const response = await this.axiosInstance.get(endpoint);
+      const silences: GrafanaSilence[] = response.data || [];
+      
+      // Filter only active silences
+      const now = new Date();
+      const activeSilences = silences.filter(silence => {
+        const startsAt = new Date(silence.startsAt);
+        const endsAt = new Date(silence.endsAt);
+        return silence.status?.state === 'active' && startsAt <= now && endsAt >= now;
+      });
+      
+      this.logger.log(`Successfully fetched ${activeSilences.length} active silences from Grafana`);
+      return activeSilences;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to fetch silences from Grafana (non-critical)\n` +
+        `  URL: ${fullUrl}\n` +
+        `  Status: ${error.response?.status || 'N/A'}\n` +
+        `  Error Message: ${error.message}`
+      );
+      // Return empty array if silences can't be fetched (non-critical)
+      return [];
+    }
+  }
+
+  isAlertSilenced(alert: GrafanaAlert, silences: GrafanaSilence[]): boolean {
+    return silences.some(silence => {
+      // Check if all matchers match the alert's labels
+      return silence.matchers.every(matcher => {
+        const labelValue = alert.labels?.[matcher.name];
+        if (!labelValue) return false;
+
+        if (matcher.isRegex) {
+          try {
+            const regex = new RegExp(matcher.value);
+            return regex.test(labelValue);
+          } catch (e) {
+            this.logger.warn(`Invalid regex in silence matcher: ${matcher.value}`);
+            return false;
+          }
+        } else {
+          return labelValue === matcher.value;
+        }
+      });
+    });
+  }
+
   async getAlerts(): Promise<DisplayAlert[]> {
     const endpoint = '/api/v1/provisioning/alert-rules';
     const fullUrl = `${this.grafanaUrl}${endpoint}`;
     
     try {
       this.logger.debug(`Fetching alerts from: ${fullUrl}`);
-      const response = await this.axiosInstance.get(endpoint);
-      const alerts: GrafanaAlert[] = response.data || [];
-      this.logger.log(`Successfully fetched ${alerts.length} alert rules from Grafana`);
+      const [alertsResponse, silences] = await Promise.all([
+        this.axiosInstance.get(endpoint),
+        this.getSilences(),
+      ]);
       
-      // Transform to display format
-      const displayAlerts = alerts.map(alert => this.transformAlertToDisplay(alert));
+      const alerts: GrafanaAlert[] = alertsResponse.data || [];
+      this.logger.log(`Successfully fetched ${alerts.length} alert rules and ${silences.length} active silences from Grafana`);
+      
+      // Transform to display format and mark silenced alerts
+      const displayAlerts = alerts.map(alert => {
+        const displayAlert = this.transformAlertToDisplay(alert);
+        displayAlert.isSilenced = this.isAlertSilenced(alert, silences);
+        return displayAlert;
+      });
+      
       return displayAlerts;
     } catch (error) {
       this.logger.error(
