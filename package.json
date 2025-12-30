@@ -1,0 +1,28 @@
+{
+  "name": "grafana-alerts-dashboard",
+  "version": "1.0.0",
+  "description": "Alternative dashboard for Grafana alerts optimized for wall screens",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "backend": "npm run start:dev --workspace=backend",
+    "frontend": "npm run dev --workspace=frontend",
+    "backend:build": "npm run build --workspace=backend",
+    "frontend:build": "npm run build --workspace=frontend",
+    "build": "npm run backend:build && npm run frontend:build",
+    "install:all": "npm install && npm install --workspace=backend && npm install --workspace=frontend"
+  },
+  "keywords": [
+    "grafana",
+    "alerts",
+    "dashboard",
+    "nestjs",
+    "vue",
+    "websocket"
+  ],
+  "author": "",
+  "license": "MIT"
+}
