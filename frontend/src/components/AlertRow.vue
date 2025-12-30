@@ -9,9 +9,6 @@
     <div class="alert-group">
       {{ alert.ruleGroup }}
     </div>
-    <div class="alert-state">
-      <span class="state-badge">{{ alert.state.toUpperCase() }}</span>
-    </div>
     <div class="alert-duration">
       {{ getDuration(alert.newStateDate) }}
     </div>
@@ -69,7 +66,7 @@ const getDuration = (dateString: string): string => {
 <style scoped>
 .alert-row {
   display: grid;
-  grid-template-columns: 50px 1fr 200px 120px 100px 60px;
+  grid-template-columns: 50px 1fr 200px 100px 60px;
   align-items: center;
   padding: 0.75rem 1.5rem;
   background: rgba(255, 255, 255, 0.03);
@@ -149,20 +146,6 @@ const getDuration = (dateString: string): string => {
   white-space: nowrap;
 }
 
-.alert-state {
-  display: flex;
-  justify-content: center;
-}
-
-.state-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.2);
-  display: inline-block;
-}
-
 .alert-duration {
   font-size: 0.9rem;
   color: #ccc;
@@ -194,7 +177,7 @@ const getDuration = (dateString: string): string => {
 
 @media (max-width: 1024px) {
   .alert-row {
-    grid-template-columns: 40px 1fr 100px 80px 50px;
+    grid-template-columns: 40px 1fr 80px 50px;
   }
   
   .alert-group {
@@ -204,7 +187,7 @@ const getDuration = (dateString: string): string => {
 
 @media (max-width: 768px) {
   .alert-row {
-    grid-template-columns: 40px 1fr 80px 50px;
+    grid-template-columns: 40px 1fr 50px;
     padding: 0.5rem 1rem;
   }
   
