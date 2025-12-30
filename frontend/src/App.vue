@@ -113,6 +113,7 @@
           <div class="header-icon"></div>
           <div class="header-name">Alert Name</div>
           <div class="header-group">Rule Group</div>
+          <div class="header-labels">Labels</div>
           <div class="header-duration">Duration</div>
           <div class="header-actions"></div>
         </div>
@@ -486,7 +487,7 @@ onUnmounted(() => {
 
 .compact-header {
   display: grid;
-  grid-template-columns: 50px 1fr 200px 100px 60px;
+  grid-template-columns: 50px 1fr 200px 300px 100px 60px;
   align-items: center;
   padding: 1rem 1.5rem;
   background: rgba(255, 255, 255, 0.08);
@@ -518,7 +519,8 @@ onUnmounted(() => {
     grid-template-columns: 40px 1fr 80px 50px;
   }
   
-  .header-group {
+  .header-group,
+  .header-labels {
     display: none;
   }
 }

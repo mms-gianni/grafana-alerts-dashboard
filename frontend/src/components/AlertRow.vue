@@ -9,6 +9,11 @@
     <div class="alert-group">
       {{ alert.ruleGroup }}
     </div>
+    <div class="alert-labels">
+      <span v-for="(value, key) in alert.labels" :key="key" class="label-tag">
+        {{ key }}: {{ value }}
+      </span>
+    </div>
     <div class="alert-duration">
       {{ getDuration(alert.newStateDate) }}
     </div>
@@ -29,6 +34,7 @@ interface Props {
     newStateDate: string
     url: string
     ruleGroup: string
+    labels?: Record<string, string>
   }
   fontSize?: number
 }
@@ -66,7 +72,7 @@ const getDuration = (dateString: string): string => {
 <style scoped>
 .alert-row {
   display: grid;
-  grid-template-columns: 50px 1fr 200px 100px 60px;
+  grid-template-columns: 50px 1fr 200px 300px 100px 60px;
   align-items: center;
   padding: 0.75rem 1.5rem;
   background: rgba(255, 255, 255, 0.03);
@@ -146,6 +152,25 @@ const getDuration = (dateString: string): string => {
   white-space: nowrap;
 }
 
+.alert-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+
+.label-tag {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(100, 181, 246, 0.2);
+  color: #64b5f6;
+  border: 1px solid rgba(100, 181, 246, 0.3);
+  white-space: nowrap;
+}
+
 .alert-duration {
   font-size: 0.9rem;
   color: #ccc;
@@ -180,7 +205,8 @@ const getDuration = (dateString: string): string => {
     grid-template-columns: 40px 1fr 80px 50px;
   }
   
-  .alert-group {
+  .alert-group,
+  .alert-labels {
     display: none;
   }
 }
