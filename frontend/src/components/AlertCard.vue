@@ -6,7 +6,11 @@
       </div>
       <div class="alert-title">
         <h3 :style="{ fontSize: `${fontSize * 0.6}rem` }">{{ alert.name }}</h3>
-        <span class="alert-state">{{ alert.state.toUpperCase() }}</span>
+        <div class="alert-labels">
+          <span v-for="(value, key) in alert.labels" :key="key" class="label-tag">
+            {{ key }}: {{ value }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -42,6 +46,7 @@ interface Props {
     state: 'ok' | 'paused' | 'alerting' | 'pending' | 'no_data'
     newStateDate: string
     url: string
+    labels?: Record<string, string>
   }
   fontSize?: number
 }
@@ -168,13 +173,21 @@ const getDuration = (dateString: string): string => {
   font-weight: 600;
 }
 
-.alert-state {
+.alert-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.label-tag {
   display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(100, 181, 246, 0.2);
+  color: #64b5f6;
+  border: 1px solid rgba(100, 181, 246, 0.3);
 }
 
 .alert-details {

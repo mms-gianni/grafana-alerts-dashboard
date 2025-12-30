@@ -151,6 +151,7 @@ interface GrafanaAlert {
   evalDate: string
   url: string
   ruleGroup: string
+  labels?: Record<string, string>
 }
 
 const alerts = ref<GrafanaAlert[]>([])
