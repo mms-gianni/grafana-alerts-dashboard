@@ -8,19 +8,31 @@
         </div>
         <div class="stat alerting">
           <span class="stat-label">Alerting:</span>
-          <span class="stat-value">{{ alertingCount }}</span>
+          <div class="stat-value">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>{{ alertingCount }}</span>
+          </div>
         </div>
         <div class="stat pending">
           <span class="stat-label">Pending:</span>
-          <span class="stat-value">{{ pendingCount }}</span>
+          <div class="stat-value">
+            <i class="pi pi-clock"></i>
+            <span>{{ pendingCount }}</span>
+          </div>
         </div>
         <div class="stat no-data">
           <span class="stat-label">No Data:</span>
-          <span class="stat-value">{{ noDataCount }}</span>
+          <div class="stat-value">
+            <i class="pi pi-question-circle"></i>
+            <span>{{ noDataCount }}</span>
+          </div>
         </div>
         <div class="stat ok">
           <span class="stat-label">OK:</span>
-          <span class="stat-value">{{ okCount }}</span>
+          <div class="stat-value">
+            <i class="pi pi-check-circle"></i>
+            <span>{{ okCount }}</span>
+          </div>
         </div>
       </div>
       <div class="header-controls">
@@ -552,9 +564,20 @@ onUnmounted(() => {
 .stat-value {
   font-size: 1.5rem;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-value i {
+  font-size: 1.2rem;
 }
 
 .stat.alerting .stat-value {
+  color: #f44336;
+}
+
+.stat.alerting .stat-value i {
   color: #f44336;
 }
 
@@ -562,11 +585,23 @@ onUnmounted(() => {
   color: #ff9800;
 }
 
+.stat.pending .stat-value i {
+  color: #ff9800;
+}
+
 .stat.no-data .stat-value {
   color: #2196f3;
 }
 
+.stat.no-data .stat-value i {
+  color: #2196f3;
+}
+
 .stat.ok .stat-value {
+  color: #4caf50;
+}
+
+.stat.ok .stat-value i {
   color: #4caf50;
 }
 
