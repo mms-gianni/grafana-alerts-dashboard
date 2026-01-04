@@ -1,0 +1,17 @@
+node_modules
+dist
+.env
+.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.git
+.gitignore
+*.md
+backend/.env
+backend/dist
+backend/node_modules
+frontend/dist
+frontend/node_modules
+frontend/.env

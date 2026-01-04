@@ -158,7 +158,9 @@ const updateLastUpdate = () => {
 }
 
 onMounted(() => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+  // In production (Docker), backend is on same host via nginx proxy
+  // In development, use VITE_BACKEND_URL or localhost:3001
+  const backendUrl = import.meta.env.PROD ? '' : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001')
   
   socket = io(backendUrl)
 

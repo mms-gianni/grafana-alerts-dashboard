@@ -44,11 +44,78 @@ monitoring/
 │   │   ├── App.vue      # Main dashboard component
 │   │   └── main.ts
 │   ├── .env.example     # Frontend environment variables template
+│   ├── Dockerfile       # Frontend Docker image
+│   ├── nginx.conf       # Nginx configuration
 │   └── package.json
 ├── .github/
 │   └── copilot-instructions.md
+├── docker-compose.yml   # Docker Compose orchestration
+├── .env.docker          # Docker environment template
 └── package.json         # Root workspace configuration
 ```
+
+## Docker Deployment
+
+The application uses **distroless images** for minimal attack surface and smaller image sizes.
+
+### Quick Start with Docker Compose
+
+1. **Copy environment file**:
+   ```bash
+   cp .env.docker .env
+   ```
+
+2. **Configure Grafana connection** in `.env`:
+   ```bash
+   GRAFANA_URL=http://your-grafana-instance:3000
+   GRAFANA_API_KEY=your-api-key-here
+   ```
+
+3. **Build and run**:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the dashboard**:
+   - Frontend: http://localhost
+   - Backend API: http://localhost:3001
+
+### Individual Container Builds
+
+**Backend**:
+```bash
+cd backend
+docker build -t grafana-alerts-backend .
+docker run -p 3001:3001 \
+  -e GRAFANA_URL=http://grafana:3000 \
+  -e GRAFANA_API_KEY=your-key \
+  grafana-alerts-backend
+```
+
+**Frontend**:
+```bash
+cd frontend
+docker build -t grafana-alerts-frontend .
+docker run -p 80:80 grafana-alerts-frontend
+```
+
+### Image Details
+
+- **Backend**: Multi-stage build using `gcr.io/distroless/nodejs20-debian12`
+  - Build stage: `node:20-alpine`
+  - Runtime: Distroless Node.js 20 (no shell, minimal dependencies)
+  
+- **Frontend**: Multi-stage build using `nginx:alpine`
+  - Build stage: `node:20-alpine` 
+  - Runtime: Nginx Alpine (static file serving)
+
+### Health Checks
+
+Both containers include health check endpoints:
+- **Backend**: `http://localhost:3001/health`
+- **Frontend**: `http://localhost/health`
+
+## Development Setup
 
 ## Prerequisites
 

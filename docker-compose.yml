@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9999:80"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - GRAFANA_URL=${GRAFANA_URL}
+      - GRAFANA_API_KEY=${GRAFANA_API_KEY}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
