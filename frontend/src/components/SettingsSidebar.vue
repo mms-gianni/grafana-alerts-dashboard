@@ -119,6 +119,10 @@ const stateOptions = [
   margin-bottom: 1rem !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
+
+.p-multiselect-item , .p-multiselect-header {
+  padding: 0.25rem 0.5rem !important;
+}
 </style>
 
 <style scoped>
