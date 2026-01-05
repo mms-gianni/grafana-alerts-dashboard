@@ -5,6 +5,9 @@
     </div>
     <div class="alert-name" :style="{ fontSize: `${fontSize}rem` }">
       {{ alert.name }}
+      <span v-if="alert.instanceName && alert.instanceName !== 'default'" class="instance-badge">
+        {{ alert.instanceName }}
+      </span>
     </div>
     <div class="alert-group">
       {{ alert.ruleGroup }}
@@ -35,6 +38,7 @@ interface Props {
     url: string
     ruleGroup: string
     labels?: Record<string, string>
+    instanceName?: string
   }
   fontSize?: number
 }
@@ -142,6 +146,22 @@ const getDuration = (dateString: string): string => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.instance-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(156, 39, 176, 0.2);
+  color: #ce93d8;
+  border: 1px solid rgba(156, 39, 176, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .alert-group {

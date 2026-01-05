@@ -10,8 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - GRAFANA_URL=${GRAFANA_URL}
-      - GRAFANA_API_KEY=${GRAFANA_API_KEY}
+      - GRAFANA_INSTANCES=${GRAFANA_INSTANCES}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]

@@ -5,8 +5,10 @@ Alternative dashboard for Grafana alerts optimized for wall screen displays. Bui
 ## Features
 
 - **Real-time Updates**: WebSocket-based live alert updates from Grafana
+- **Multiple Grafana Instances**: Monitor alerts from multiple Grafana instances simultaneously
 - **Wall Screen Optimized**: Large, clear display designed for monitoring walls
 - **Alert Status Visualization**: Color-coded alerts by state (alerting, pending, ok, paused, no_data)
+- **Instance Identification**: Visual badges showing which Grafana instance each alert belongs to
 - **Auto-refresh**: Automatic polling of Grafana API every 30 seconds
 - **Statistics Dashboard**: Real-time stats showing alert counts by state
 - **Responsive Design**: Works on both large displays and regular screens
@@ -66,10 +68,18 @@ The application uses **distroless images** for minimal attack surface and smalle
    ```
 
 2. **Configure Grafana connection** in `.env`:
+   
+   Single instance:
    ```bash
-   GRAFANA_URL=http://your-grafana-instance:3000
-   GRAFANA_API_KEY=your-api-key-here
+   GRAFANA_INSTANCES='[{"name":"default","url":"https://grafana.example.com","apiKey":"glsa_xxx"}]'
    ```
+   
+   Multiple instances:
+   ```bash
+   GRAFANA_INSTANCES='[{"name":"prod","url":"https://grafana-prod.example.com","apiKey":"glsa_xxx"},{"name":"staging","url":"https://grafana-staging.example.com","apiKey":"glsa_yyy"}]'
+   ```
+   
+   > **Note**: Each alert will display a badge indicating which instance it belongs to (except for instances named "default").
 
 3. **Build and run**:
    ```bash
@@ -153,10 +163,10 @@ Both containers include health check endpoints:
    cp .env.example .env
    ```
    
-   Edit `backend/.env` with your Grafana configuration:
+   Edit `backend/.env`:
    ```env
-   GRAFANA_URL=http://your-grafana-instance:3000
-   GRAFANA_API_KEY=your-grafana-api-key
+   # JSON array format
+   GRAFANA_INSTANCES='[{"name":"prod","url":"https://grafana-prod:3000","apiKey":"glsa_xxx"},{"name":"staging","url":"https://grafana-staging:3000","apiKey":"glsa_yyy"}]'
    PORT=3001
    CORS_ORIGIN=http://localhost:5173
    POLL_INTERVAL=30000

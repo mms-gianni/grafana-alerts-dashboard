@@ -5,7 +5,12 @@
         <i :class="getStateIcon(alert.state)"></i>
       </div>
       <div class="alert-title">
-        <h3 :style="{ fontSize: `${fontSize * 0.6}rem` }">{{ alert.name }}</h3>
+        <h3 :style="{ fontSize: `${fontSize * 0.6}rem` }">
+          {{ alert.name }}
+        </h3>
+        <span v-if="alert.instanceName && alert.instanceName !== 'default'" class="instance-badge">
+          {{ alert.instanceName }}
+        </span>
         <div class="alert-labels">
           <span v-for="(value, key) in alert.labels" :key="key" class="label-tag">
             {{ key }}: {{ value }}
@@ -47,6 +52,7 @@ interface Props {
     newStateDate: string
     url: string
     labels?: Record<string, string>
+    instanceName?: string
   }
   fontSize?: number
 }
@@ -171,6 +177,18 @@ const getDuration = (dateString: string): string => {
 .alert-title h3 {
   margin: 0 0 0.5rem 0;
   font-weight: 600;
+}
+
+.instance-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(156, 39, 176, 0.2);
+  color: #ce93d8;
+  border: 1px solid rgba(156, 39, 176, 0.3);
+  margin-bottom: 0.5rem;
 }
 
 .alert-labels {

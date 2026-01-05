@@ -32,6 +32,7 @@ export interface DisplayAlert {
   labels: Record<string, string>;
   annotations: Record<string, string>;
   isSilenced?: boolean;
+  instanceName?: string;
 }
 
 export interface GrafanaSilence {
@@ -53,23 +54,65 @@ export interface GrafanaSilence {
 @Injectable()
 export class GrafanaService {
   private readonly logger = new Logger(GrafanaService.name);
-  private readonly axiosInstance: AxiosInstance;
-  private readonly grafanaUrl: string;
+  private readonly instances: Array<{
+    name: string;
+    url: string;
+    axiosInstance: AxiosInstance;
+  }> = [];
 
   constructor(private configService: ConfigService) {
-    this.grafanaUrl = this.configService.get<string>('GRAFANA_URL');
-    const apiKey = this.configService.get<string>('GRAFANA_API_KEY');
-
-    this.axiosInstance = axios.create({
-      baseURL: this.grafanaUrl,
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    this.initializeInstances();
   }
 
-  private transformAlertToDisplay(alert: GrafanaAlert): DisplayAlert {
+  private initializeInstances() {
+    const instancesConfig = this.configService.get<string>('GRAFANA_INSTANCES');
+    
+    if (!instancesConfig) {
+      this.logger.error('GRAFANA_INSTANCES environment variable is required. Format: JSON array [{"name":"...","url":"...","apiKey":"..."}]');
+      return;
+    }
+
+    try {
+      // Parse JSON format: [{"name":"default","url":"http://...","apiKey":"..."}]
+      const instances: Array<{ name: string; url: string; apiKey: string }> = JSON.parse(instancesConfig);
+      
+      if (!Array.isArray(instances)) {
+        this.logger.error('GRAFANA_INSTANCES must be a JSON array');
+        return;
+      }
+
+      instances.forEach((config, index) => {
+        if (!config.name || !config.url || !config.apiKey) {
+          this.logger.warn(`Invalid Grafana instance configuration at index ${index}: missing required fields (name, url, apiKey)`);
+          return;
+        }
+
+        this.instances.push({
+          name: config.name.trim(),
+          url: config.url.trim(),
+          axiosInstance: axios.create({
+            baseURL: config.url.trim(),
+            headers: {
+              Authorization: `Bearer ${config.apiKey.trim()}`,
+              'Content-Type': 'application/json',
+            },
+          }),
+        });
+        this.logger.log(`Initialized Grafana instance: ${config.name} (${config.url})`);
+      });
+
+      if (this.instances.length === 0) {
+        this.logger.error('No valid Grafana instances configured');
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to parse GRAFANA_INSTANCES JSON: ${error.message}\n` +
+        `Expected format: [{"name":"default","url":"https://grafana.example.com","apiKey":"glsa_xxx"}]`
+      );
+    }
+  }
+
+  private transformAlertToDisplay(alert: GrafanaAlert, instanceName: string, instanceUrl: string): DisplayAlert {
     // Determine state based on Grafana alert rule properties
     let state: DisplayAlert['state'] = 'ok';
     
@@ -89,21 +132,69 @@ export class GrafanaService {
       name: alert.title,
       state,
       newStateDate: alert.updated,
-      url: `${this.grafanaUrl}/alerting/grafana/${alert.uid}/view`,
+      url: `${instanceUrl}/alerting/grafana/${alert.uid}/view`,
       ruleGroup: alert.ruleGroup,
       folderUID: alert.folderUID,
       labels: alert.labels || {},
       annotations: alert.annotations || {},
+      instanceName,
     };
   }
 
-  async getSilences(): Promise<GrafanaSilence[]> {
+  async getSilences(): Promise<DisplayAlert[]> {
+    const allAlerts: DisplayAlert[] = [];
+
+    // Fetch alerts from all instances in parallel
+    const instancePromises = this.instances.map(async (instance) => {
+      const endpoint = '/api/v1/provisioning/alert-rules';
+      const fullUrl = `${instance.url}${endpoint}`;
+      
+      try {
+        this.logger.debug(`Fetching alerts from ${instance.name}: ${fullUrl}`);
+        const [alertsResponse, silences] = await Promise.all([
+          instance.axiosInstance.get(endpoint),
+          this.getSilencesForInstance(instance),
+        ]);
+        
+        const alerts: GrafanaAlert[] = alertsResponse.data || [];
+        this.logger.log(`Successfully fetched ${alerts.length} alert rules and ${silences.length} active silences from ${instance.name}`);
+        
+        // Transform to display format and mark silenced alerts
+        return alerts.map(alert => {
+          const displayAlert = this.transformAlertToDisplay(alert, instance.name, instance.url);
+          displayAlert.isSilenced = this.isAlertSilenced(alert, silences);
+          return displayAlert;
+        });
+      } catch (error) {
+        this.logger.error(
+          `Failed to fetch alert rules from ${instance.name}\n` +
+          `  URL: ${fullUrl}\n` +
+          `  Status: ${error.response?.status || 'N/A'}\n` +
+          `  Status Text: ${error.response?.statusText || 'N/A'}\n` +
+          `  Error Message: ${error.message}\n` +
+          `  Response Data: ${JSON.stringify(error.response?.data || {}, null, 2)}\n` +
+          `. API Key: ${instance.axiosInstance.defaults.headers['Authorization']}\n` +
+          `  Hint: Make sure you are using the Grafana Alerting Provisioning API`
+        );
+        // Return empty array for this instance on error
+        return [];
+      }
+    });
+
+    const instanceResults = await Promise.all(instancePromises);
+    instanceResults.forEach(alerts => allAlerts.push(...alerts));
+
+    this.logger.log(`Total alerts from all instances: ${allAlerts.length}`);
+    return allAlerts;
+  }
+
+  private async getSilencesForInstance(instance: { name: string; url: string; axiosInstance: AxiosInstance }): Promise<GrafanaSilence[]> {
     const endpoint = '/api/alertmanager/grafana/api/v2/silences';
-    const fullUrl = `${this.grafanaUrl}${endpoint}`;
+    const fullUrl = `${instance.url}${endpoint}`;
     
     try {
-      this.logger.debug(`Fetching silences from: ${fullUrl}`);
-      const response = await this.axiosInstance.get(endpoint);
+      this.logger.debug(`Fetching silences from ${instance.name}: ${fullUrl}`);
+      const response = await instance.axiosInstance.get(endpoint);
       const silences: GrafanaSilence[] = response.data || [];
       
       // Filter only active silences
@@ -114,11 +205,11 @@ export class GrafanaService {
         return silence.status?.state === 'active' && startsAt <= now && endsAt >= now;
       });
       
-      this.logger.log(`Successfully fetched ${activeSilences.length} active silences from Grafana`);
+      this.logger.log(`Successfully fetched ${activeSilences.length} active silences from ${instance.name}`);
       return activeSilences;
     } catch (error) {
       this.logger.warn(
-        `Failed to fetch silences from Grafana (non-critical)\n` +
+        `Failed to fetch silences from ${instance.name} (non-critical)\n` +
         `  URL: ${fullUrl}\n` +
         `  Status: ${error.response?.status || 'N/A'}\n` +
         `  Error Message: ${error.message}`
@@ -151,87 +242,70 @@ export class GrafanaService {
   }
 
   async getAlerts(): Promise<DisplayAlert[]> {
-    const endpoint = '/api/v1/provisioning/alert-rules';
-    const fullUrl = `${this.grafanaUrl}${endpoint}`;
-    
-    try {
-      this.logger.debug(`Fetching alerts from: ${fullUrl}`);
-      const [alertsResponse, silences] = await Promise.all([
-        this.axiosInstance.get(endpoint),
-        this.getSilences(),
-      ]);
-      
-      const alerts: GrafanaAlert[] = alertsResponse.data || [];
-      this.logger.log(`Successfully fetched ${alerts.length} alert rules and ${silences.length} active silences from Grafana`);
-      
-      // Transform to display format and mark silenced alerts
-      const displayAlerts = alerts.map(alert => {
-        const displayAlert = this.transformAlertToDisplay(alert);
-        displayAlert.isSilenced = this.isAlertSilenced(alert, silences);
-        return displayAlert;
-      });
-      
-      return displayAlerts;
-    } catch (error) {
-      this.logger.error(
-        `Failed to fetch alert rules from Grafana\n` +
-        `  URL: ${fullUrl}\n` +
-        `  Status: ${error.response?.status || 'N/A'}\n` +
-        `  Status Text: ${error.response?.statusText || 'N/A'}\n` +
-        `  Error Message: ${error.message}\n` +
-        `  Response Data: ${JSON.stringify(error.response?.data || {}, null, 2)}\n` +
-        `  Hint: Make sure you are using the Grafana Alerting Provisioning API`
-      );
-      throw error;
-    }
+    return this.getSilences();
   }
 
   async getAlertById(id: number): Promise<GrafanaAlert> {
-    const endpoint = `/api/v1/provisioning/alert-rules/${id}`;
-    const fullUrl = `${this.grafanaUrl}${endpoint}`;
-    
-    try {
-      this.logger.debug(`Fetching alert ${id} from: ${fullUrl}`);
-      const response = await this.axiosInstance.get(endpoint);
-      this.logger.log(`Successfully fetched alert ${id} from Grafana`);
-      return response.data;
-    } catch (error) {
-      this.logger.error(
-        `Failed to fetch alert ${id} from Grafana\n` +
-        `  URL: ${fullUrl}\n` +
-        `  Status: ${error.response?.status || 'N/A'}\n` +
-        `  Status Text: ${error.response?.statusText || 'N/A'}\n` +
-        `  Error Message: ${error.message}\n` +
-        `  Response Data: ${JSON.stringify(error.response?.data || {}, null, 2)}`
-      );
-      throw error;
+    // Search across all instances
+    for (const instance of this.instances) {
+      const endpoint = `/api/v1/provisioning/alert-rules/${id}`;
+      const fullUrl = `${instance.url}${endpoint}`;
+      
+      try {
+        this.logger.debug(`Fetching alert ${id} from ${instance.name}: ${fullUrl}`);
+        const response = await instance.axiosInstance.get(endpoint);
+        this.logger.log(`Successfully fetched alert ${id} from ${instance.name}`);
+        return response.data;
+      } catch (error) {
+        // Continue to next instance if not found
+        if (error.response?.status === 404) {
+          continue;
+        }
+        this.logger.error(
+          `Failed to fetch alert ${id} from ${instance.name}\n` +
+          `  URL: ${fullUrl}\n` +
+          `  Status: ${error.response?.status || 'N/A'}\n` +
+          `  Status Text: ${error.response?.statusText || 'N/A'}\n` +
+          `  Error Message: ${error.message}\n` +
+          `  Response Data: ${JSON.stringify(error.response?.data || {}, null, 2)}`
+        );
+      }
     }
+    throw new Error(`Alert ${id} not found in any Grafana instance`);
   }
 
   async pauseAlert(uid: string): Promise<void> {
-    const endpoint = `/api/v1/provisioning/alert-rules/${uid}`;
-    const fullUrl = `${this.grafanaUrl}${endpoint}`;
-    
-    try {
-      this.logger.debug(`Pausing alert ${uid} at: ${fullUrl}`);
-      // First get the alert
-      const alert = await this.axiosInstance.get(endpoint);
-      // Then update it with isPaused: true
-      await this.axiosInstance.put(endpoint, {
-        ...alert.data,
-        isPaused: true,
-      });
-      this.logger.log(`Alert ${uid} paused successfully`);
-    } catch (error) {
-      this.logger.error(
-        `Failed to pause alert ${uid}\n` +
-        `  URL: ${fullUrl}\n` +
-        `  Status: ${error.response?.status || 'N/A'}\n` +
-        `  Status Text: ${error.response?.statusText || 'N/A'}\n` +
-        `  Error Message: ${error.message}\n` +
-        `  Response Data: ${JSON.stringify(error.response?.data || {}, null, 2)}`
-      );
-      throw error;
+    // Search across all instances
+    for (const instance of this.instances) {
+      const endpoint = `/api/v1/provisioning/alert-rules/${uid}`;
+      const fullUrl = `${instance.url}${endpoint}`;
+      
+      try {
+        this.logger.debug(`Pausing alert ${uid} at ${instance.name}: ${fullUrl}`);
+        // First get the alert
+        const alert = await instance.axiosInstance.get(endpoint);
+        // Then update it with isPaused: true
+        await instance.axiosInstance.put(endpoint, {
+          ...alert.data,
+          isPaused: true,
+        });
+        this.logger.log(`Alert ${uid} paused successfully on ${instance.name}`);
+        return;
+      } catch (error) {
+        // Continue to next instance if not found
+        if (error.response?.status === 404) {
+          continue;
+        }
+        this.logger.error(
+          `Failed to pause alert ${uid} on ${instance.name}\n` +
+          `  URL: ${fullUrl}\n` +
+          `  Status: ${error.response?.status || 'N/A'}\n` +
+          `  Status Text: ${error.response?.statusText || 'N/A'}\n` +
+          `  Error Message: ${error.message}\n` +
+          `  Response Data: ${JSON.stringify(error.response?.data || {}, null, 2)}`
+        );
+      }
     }
+    throw new Error(`Alert ${uid} not found in any Grafana instance`);
   }
 }
