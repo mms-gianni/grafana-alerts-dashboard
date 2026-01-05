@@ -33,6 +33,26 @@
         </div>
       </div>
 
+      <div class="drawer-section" v-if="availableInstances.length > 0">
+        <h3 class="drawer-section-title">Filter by Instance</h3>
+        <MultiSelect
+          id="instance-filter"
+          :modelValue="selectedInstances"
+          @update:modelValue="$emit('update:selectedInstances', $event)"
+          :options="availableInstances"
+          placeholder="All instances"
+          :maxSelectedLabels="3"
+          class="instance-filter"
+        >
+          <template #option="slotProps">
+            <div class="filter-option">
+              <i class="pi pi-server" style="color: #ce93d8"></i>
+              <span>{{ slotProps.option }}</span>
+            </div>
+          </template>
+        </MultiSelect>
+      </div>
+
       <div class="drawer-section">
         <h3 class="drawer-section-title">Text Size</h3>
         <div class="size-control">
@@ -84,9 +104,11 @@ import MultiSelect from 'primevue/multiselect'
 interface Props {
   visible: boolean
   selectedStates: string[]
+  selectedInstances: string[]
   showSilenced: boolean
   fontSize: number
   viewMode: 'compact' | 'grid'
+  availableInstances: string[]
 }
 
 const props = defineProps<Props>()
@@ -94,6 +116,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:visible': [value: boolean]
   'update:selectedStates': [value: string[]]
+  'update:selectedInstances': [value: string[]]
   'update:showSilenced': [value: boolean]
   'update:fontSize': [value: number]
   'update:viewMode': [value: 'compact' | 'grid']
@@ -160,7 +183,11 @@ const stateOptions = [
   font-size: 1rem;
 }
 
-.state-filter {
+.state-filter {  
+  width: 100%;
+}
+
+.instance-filter {
   width: 100%;
 }
 

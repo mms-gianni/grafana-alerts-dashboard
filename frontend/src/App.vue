@@ -45,6 +45,14 @@
         </div>
         <button 
           class="drawer-toggle-btn"
+          @click="refreshAlerts"
+          :disabled="refreshing || !connectionStatus.connected"
+          title="Refresh alerts"
+        >
+          <i :class="['pi', 'pi-refresh', { 'pi-spin': refreshing }]"></i>
+        </button>
+        <button 
+          class="drawer-toggle-btn"
           @click="showSidebar = true"
           title="Open settings"
         >
@@ -56,9 +64,11 @@
     <SettingsSidebar
       v-model:visible="showSidebar"
       v-model:selectedStates="selectedStates"
+      v-model:selectedInstances="selectedInstances"
       v-model:showSilenced="showSilenced"
       v-model:fontSize="fontSize"
       v-model:viewMode="viewMode"
+      :availableInstances="availableInstances"
     />
 
     <div class="alerts-container">
@@ -88,7 +98,7 @@
         </div>
         <AlertRow
           v-for="alert in sortedAlerts"
-          :key="alert.id"
+          :key="`${alert.instanceName || 'default'}-${alert.id}`"
           :alert="alert"
           :fontSize="fontSize"
         />
@@ -97,7 +107,7 @@
       <div v-else class="alerts-grid">
         <AlertCard
           v-for="alert in sortedAlerts"
-          :key="alert.id"
+          :key="`${alert.instanceName || 'default'}-${alert.id}`"
           :alert="alert"
           :fontSize="fontSize"
         />
@@ -123,6 +133,7 @@ interface GrafanaAlert {
   ruleGroup: string
   labels?: Record<string, string>
   isSilenced?: boolean
+  instanceName?: string
 }
 
 const alerts = ref<GrafanaAlert[]>([])
@@ -132,19 +143,50 @@ const lastUpdate = ref('Never')
 const connectionStatus = ref({ connected: false, text: 'Connecting...' })
 const viewMode = ref<'compact' | 'grid'>('compact')
 const selectedStates = ref<string[]>(['alerting', 'pending', 'no_data', 'paused', 'ok'])
+const selectedInstances = ref<string[]>([])
 const showFilter = ref(false)
 const fontSize = ref(2)
 const showSilenced = ref(true)
 const showSidebar = ref(false)
+const refreshing = ref(false)
 
 let socket: Socket | null = null
 
+const refreshAlerts = () => {
+  if (socket && connectionStatus.value.connected) {
+    refreshing.value = true
+    socket.emit('getAlerts')
+    setTimeout(() => {
+      refreshing.value = false
+    }, 1000)
+  }
+}
+
+const availableInstances = computed(() => {
+  const instances = new Set<string>()
+  alerts.value.forEach(alert => {
+    if (alert.instanceName) {
+      instances.add(alert.instanceName)
+    }
+  })
+  return Array.from(instances).sort()
+})
+
 const sortedAlerts = computed(() => {
   const stateOrder = { alerting: 0, pending: 1, no_data: 2, paused: 3, ok: 4 }
-  return [...alerts.value]
+  
+  let filtered = [...alerts.value]
     .filter(alert => selectedStates.value.includes(alert.state))
     .filter(alert => showSilenced.value || !alert.isSilenced)
+    .filter(alert => {
+      // If no instances selected, show all
+      if (selectedInstances.value.length === 0) return true
+      // Filter by selected instances
+      return selectedInstances.value.includes(alert.instanceName || 'default')
+    })
     .sort((a, b) => stateOrder[a.state] - stateOrder[b.state])
+
+  return filtered
 })
 
 const alertingCount = computed(() => alerts.value.filter(a => a.state === 'alerting').length)
@@ -242,9 +284,14 @@ onUnmounted(() => {
   font-size: 1.2rem;
 }
 
-.drawer-toggle-btn:hover {
+.drawer-toggle-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+}
+
+.drawer-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .connection-status {
