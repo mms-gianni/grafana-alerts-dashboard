@@ -274,17 +274,17 @@ onUnmounted(() => {
 
 /* Light theme */
 .dashboard.theme-light {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+  background: linear-gradient(135deg, #f0f2f5 0%, #e1e5eb 100%);
   color: #1a1a1a;
 }
 
 .dashboard.theme-light .dashboard-header {
-  background: rgba(255, 255, 255, 0.8);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.12);
 }
 
 .dashboard.theme-light .stat-label {
-  color: #666;
+  color: #555;
 }
 
 .dashboard.theme-light .stat-value {
@@ -292,20 +292,20 @@ onUnmounted(() => {
 }
 
 .dashboard.theme-light .connection-status {
-  color: #666;
+  color: #555;
 }
 
 .dashboard.theme-light .last-update {
-  color: #999;
+  color: #777;
 }
 
 .dashboard.theme-light .drawer-toggle-btn {
-  background: rgba(0, 0, 0, 0.05);
-  color: #666;
+  background: rgba(0, 0, 0, 0.08);
+  color: #555;
 }
 
 .dashboard.theme-light .drawer-toggle-btn:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.12);
   color: #1a1a1a;
 }
 
@@ -316,9 +316,10 @@ onUnmounted(() => {
 }
 
 .dashboard.theme-light .compact-header {
-  background: rgba(0, 0, 0, 0.05);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-  color: #666;
+  background: rgba(0, 0, 0, 0.08);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+  color: #555;
+  font-weight: 600;
 }
 
 .dashboard-header {
@@ -576,12 +577,12 @@ onUnmounted(() => {
 <style>
 /* Global light theme overrides for child components */
 .theme-light .alert-row {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(0, 0, 0, 0.02);
   color: #1a1a1a;
 }
 
 .theme-light .alert-row:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .theme-light .alert-name,
@@ -591,42 +592,45 @@ onUnmounted(() => {
 }
 
 .theme-light .alert-group {
-  color: #666;
+  color: #555;
 }
 
 .theme-light .alert-duration {
-  color: #999;
+  color: #666;
 }
 
-.theme-light .label-tag,
-.theme-light .instance-badge {
-  background: rgba(100, 181, 246, 0.15);
-  border-color: rgba(100, 181, 246, 0.4);
+.theme-light .label-tag {
+  background: rgba(25, 118, 210, 0.2);
+  color: #0d47a1;
+  border-color: rgba(25, 118, 210, 0.5);
+  font-weight: 600;
 }
 
 .theme-light .instance-badge {
-  background: rgba(156, 39, 176, 0.15);
-  border-color: rgba(156, 39, 176, 0.4);
+  background: rgba(123, 31, 162, 0.2);
+  color: #6a1b9a;
+  border-color: rgba(123, 31, 162, 0.5);
+  font-weight: 600;
 }
 
 .theme-light .view-link {
-  color: #1976d2;
+  color: #1565c0;
 }
 
 .theme-light .view-link:hover {
-  color: #1565c0;
-  background: rgba(25, 118, 210, 0.1);
+  color: #0d47a1;
+  background: rgba(25, 118, 210, 0.15);
 }
 
 .theme-light .alert-card {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
   color: #1a1a1a;
 }
 
 .theme-light .alert-card:hover {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .theme-light .alert-title h3 {
@@ -634,7 +638,7 @@ onUnmounted(() => {
 }
 
 .theme-light .detail-label {
-  color: #666;
+  color: #555;
 }
 
 .theme-light .detail-value {
@@ -642,10 +646,10 @@ onUnmounted(() => {
 }
 
 .theme-light .detail-row {
-  border-bottom-color: rgba(0, 0, 0, 0.1);
+  border-bottom-color: rgba(0, 0, 0, 0.12);
 }
 
 .theme-light .alert-footer {
-  border-top-color: rgba(0, 0, 0, 0.1);
+  border-top-color: rgba(0, 0, 0, 0.12);
 }
 </style>
