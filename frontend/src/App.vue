@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard">
+  <div :class="['dashboard', `theme-${effectiveTheme}`]">
     <header class="dashboard-header">
       <div class="stats-section">
         <div class="stat">
@@ -68,6 +68,7 @@
       v-model:showSilenced="showSilenced"
       v-model:fontSize="fontSize"
       v-model:viewMode="viewMode"
+      v-model:theme="theme"
       :availableInstances="availableInstances"
     />
 
@@ -144,11 +145,25 @@ const connectionStatus = ref({ connected: false, text: 'Connecting...' })
 const viewMode = ref<'compact' | 'grid'>('compact')
 const selectedStates = ref<string[]>(['alerting', 'pending', 'no_data', 'paused', 'ok'])
 const selectedInstances = ref<string[]>([])
-const showFilter = ref(false)
 const fontSize = ref(2)
 const showSilenced = ref(true)
 const showSidebar = ref(false)
 const refreshing = ref(false)
+const theme = ref<'light' | 'system' | 'dark'>('dark')
+
+const systemPrefersDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+// Watch for system theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  systemPrefersDark.value = e.matches
+})
+
+const effectiveTheme = computed(() => {
+  if (theme.value === 'system') {
+    return systemPrefersDark.value ? 'dark' : 'light'
+  }
+  return theme.value
+})
 
 let socket: Socket | null = null
 
@@ -241,19 +256,76 @@ onUnmounted(() => {
 <style scoped>
 .dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
-  color: #fff;
   display: flex;
   flex-direction: column;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Dark theme (default) */
+.dashboard.theme-dark {
+  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+  color: #fff;
+}
+
+.dashboard.theme-dark .dashboard-header {
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Light theme */
+.dashboard.theme-light {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+  color: #1a1a1a;
+}
+
+.dashboard.theme-light .dashboard-header {
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.dashboard.theme-light .stat-label {
+  color: #666;
+}
+
+.dashboard.theme-light .stat-value {
+  color: #1a1a1a;
+}
+
+.dashboard.theme-light .connection-status {
+  color: #666;
+}
+
+.dashboard.theme-light .last-update {
+  color: #999;
+}
+
+.dashboard.theme-light .drawer-toggle-btn {
+  background: rgba(0, 0, 0, 0.05);
+  color: #666;
+}
+
+.dashboard.theme-light .drawer-toggle-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+.dashboard.theme-light .loading,
+.dashboard.theme-light .error-message,
+.dashboard.theme-light .no-alerts {
+  color: #1a1a1a;
+}
+
+.dashboard.theme-light .compact-header {
+  background: rgba(0, 0, 0, 0.05);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  color: #666;
 }
 
 .dashboard-header {
-  background: rgba(0, 0, 0, 0.3);
   padding: 1.5rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   flex-wrap: wrap;
   gap: 1.5rem;
 }
@@ -498,5 +570,82 @@ onUnmounted(() => {
   .alerts-grid {
     grid-template-columns: 1fr;
   }
+}
+</style>
+
+<style>
+/* Global light theme overrides for child components */
+.theme-light .alert-row {
+  background: rgba(0, 0, 0, 0.03);
+  color: #1a1a1a;
+}
+
+.theme-light .alert-row:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.theme-light .alert-name,
+.theme-light .alert-group,
+.theme-light .alert-duration {
+  color: #1a1a1a;
+}
+
+.theme-light .alert-group {
+  color: #666;
+}
+
+.theme-light .alert-duration {
+  color: #999;
+}
+
+.theme-light .label-tag,
+.theme-light .instance-badge {
+  background: rgba(100, 181, 246, 0.15);
+  border-color: rgba(100, 181, 246, 0.4);
+}
+
+.theme-light .instance-badge {
+  background: rgba(156, 39, 176, 0.15);
+  border-color: rgba(156, 39, 176, 0.4);
+}
+
+.theme-light .view-link {
+  color: #1976d2;
+}
+
+.theme-light .view-link:hover {
+  color: #1565c0;
+  background: rgba(25, 118, 210, 0.1);
+}
+
+.theme-light .alert-card {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+.theme-light .alert-card:hover {
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.theme-light .alert-title h3 {
+  color: #1a1a1a;
+}
+
+.theme-light .detail-label {
+  color: #666;
+}
+
+.theme-light .detail-value {
+  color: #1a1a1a;
+}
+
+.theme-light .detail-row {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.theme-light .alert-footer {
+  border-top-color: rgba(0, 0, 0, 0.1);
 }
 </style>

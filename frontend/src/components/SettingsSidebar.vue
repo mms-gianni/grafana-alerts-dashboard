@@ -72,6 +72,36 @@
       </div>
 
       <div class="drawer-section">
+        <h3 class="drawer-section-title">Theme</h3>
+        <div class="theme-toggle">
+          <button 
+            :class="['toggle-btn', { active: theme === 'light' }]" 
+            @click="$emit('update:theme', 'light')"
+            title="Light Theme"
+          >
+            <i class="pi pi-sun"></i>
+            <span>Light</span>
+          </button>
+          <button 
+            :class="['toggle-btn', { active: theme === 'system' }]" 
+            @click="$emit('update:theme', 'system')"
+            title="System Theme"
+          >
+            <i class="pi pi-desktop"></i>
+            <span>System</span>
+          </button>
+          <button 
+            :class="['toggle-btn', { active: theme === 'dark' }]" 
+            @click="$emit('update:theme', 'dark')"
+            title="Dark Theme"
+          >
+            <i class="pi pi-moon"></i>
+            <span>Dark</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-section">
         <h3 class="drawer-section-title">View Mode</h3>
         <div class="view-toggle">
           <button 
@@ -108,6 +138,7 @@ interface Props {
   showSilenced: boolean
   fontSize: number
   viewMode: 'compact' | 'grid'
+  theme: 'light' | 'system' | 'dark'
   availableInstances: string[]
 }
 
@@ -120,6 +151,7 @@ const emit = defineEmits<{
   'update:showSilenced': [value: boolean]
   'update:fontSize': [value: number]
   'update:viewMode': [value: 'compact' | 'grid']
+  'update:theme': [value: 'light' | 'system' | 'dark']
 }>()
 
 const isVisible = computed({
@@ -263,20 +295,32 @@ const stateOptions = [
   width: 100%;
 }
 
+.theme-toggle {
+  display: flex;
+  gap: 0.35rem;
+  width: 100%;
+}
+
 .toggle-btn {
   flex: 1;
   background: rgba(255, 255, 255, 0.05);
   border: none;
   color: #aaa;
   cursor: pointer;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.5rem;
   border-radius: 6px;
   transition: all 0.2s;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  font-size: 1rem;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  min-width: 0;
+}
+
+.toggle-btn i {
+  font-size: 1.2rem;
 }
 
 .toggle-btn:hover {
