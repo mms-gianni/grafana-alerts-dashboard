@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import AlertCard from './components/AlertCard.vue'
 import AlertRow from './components/AlertRow.vue'
 import SettingsSidebar from './components/SettingsSidebar.vue'
@@ -137,19 +137,65 @@ interface GrafanaAlert {
   instanceName?: string
 }
 
+// Cookie utility functions
+const setCookie = (name: string, value: string, days: number = 365) => {
+  const date = new Date()
+  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
+  document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`
+}
+
+const getCookie = (name: string): string | null => {
+  const nameEQ = name + "="
+  const ca = document.cookie.split(';')
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i]
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length)
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length)
+  }
+  return null
+}
+
+const loadSettings = () => {
+  try {
+    const saved = getCookie('alertsSettings')
+    if (saved) {
+      const settings = JSON.parse(decodeURIComponent(saved))
+      return settings
+    }
+  } catch (e) {
+    console.error('Failed to load settings from cookie:', e)
+  }
+  return null
+}
+
+const saveSettings = () => {
+  const settings = {
+    viewMode: viewMode.value,
+    selectedStates: selectedStates.value,
+    selectedInstances: selectedInstances.value,
+    fontSize: fontSize.value,
+    showSilenced: showSilenced.value,
+    theme: theme.value
+  }
+  setCookie('alertsSettings', encodeURIComponent(JSON.stringify(settings)))
+}
+
+// Load saved settings
+const savedSettings = loadSettings()
+
 const alerts = ref<GrafanaAlert[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 const lastUpdate = ref('Never')
 const connectionStatus = ref({ connected: false, text: 'Connecting...' })
-const viewMode = ref<'compact' | 'grid'>('compact')
-const selectedStates = ref<string[]>(['alerting', 'pending', 'no_data', 'paused', 'ok'])
-const selectedInstances = ref<string[]>([])
-const fontSize = ref(2)
-const showSilenced = ref(true)
+const viewMode = ref<'compact' | 'grid'>(savedSettings?.viewMode || 'compact')
+const selectedStates = ref<string[]>(savedSettings?.selectedStates || ['alerting', 'pending', 'no_data', 'paused', 'ok'])
+const selectedInstances = ref<string[]>(savedSettings?.selectedInstances || [])
+const fontSize = ref(savedSettings?.fontSize || 2)
+const showSilenced = ref(savedSettings?.showSilenced ?? true)
 const showSidebar = ref(false)
 const refreshing = ref(false)
-const theme = ref<'light' | 'system' | 'dark'>('dark')
+const theme = ref<'light' | 'system' | 'dark'>(savedSettings?.theme || 'dark')
 
 const systemPrefersDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 
@@ -213,6 +259,13 @@ const updateLastUpdate = () => {
   const now = new Date()
   lastUpdate.value = now.toLocaleTimeString()
 }
+
+// Watch for sidebar closing to save settings
+watch(showSidebar, (newValue, oldValue) => {
+  if (oldValue === true && newValue === false) {
+    saveSettings()
+  }
+})
 
 onMounted(() => {
   // In production (Docker), backend is on same host via nginx proxy
