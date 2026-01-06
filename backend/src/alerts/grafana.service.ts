@@ -30,6 +30,17 @@ export interface DisplayAlert {
   ruleGroup: string;
   folderUID: string;
   labels: Record<string, string>;
+  alerts?: Array<{
+    labels: Record<string, string>;
+    annotations: Record<string, string>;
+    state: 'Alerting' | 'Normal';
+    activeAt: string;
+    value: string;
+  }>;
+  totals?: {
+    alerting: number;
+    normal: number;
+  };
   annotations: Record<string, string>;
   isSilenced?: boolean;
   instanceName?: string;
@@ -62,10 +73,14 @@ export interface PrometheusRule {
   lastError?: string;
   evaluationTime: number;
   lastEvaluation: string;
+  totals: {
+    alerting: number;
+    normal: number;
+  };
   alerts?: Array<{
     labels: Record<string, string>;
     annotations: Record<string, string>;
-    state: 'firing' | 'pending';
+    state: 'Alerting' | 'Normal';
     activeAt: string;
     value: string;
   }>;
@@ -188,6 +203,8 @@ export class GrafanaService {
       url: `${instanceUrl}/alerting/grafana/${alert.uid}/view`,
       ruleGroup: alert.ruleGroup,
       folderUID: alert.folderUID,
+      alerts: prometheusRule?.alerts,
+      totals: prometheusRule?.totals,
       labels: alert.labels || {},
       annotations: alert.annotations || {},
       instanceName,

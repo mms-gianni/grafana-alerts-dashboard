@@ -21,16 +21,23 @@
 
     <div class="alert-details">
       <div class="detail-row">
-        <span class="detail-label">Alert ID:</span>
-        <span class="detail-value">{{ alert.id }}</span>
-      </div>
-      <div class="detail-row">
         <span class="detail-label">Since:</span>
         <span class="detail-value">{{ formatDate(alert.newStateDate) }}</span>
       </div>
       <div class="detail-row">
         <span class="detail-label">Duration:</span>
         <span class="detail-value">{{ getDuration(alert.newStateDate) }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Alerts</span>
+        <div class="detail-value totals-chips">
+          <span v-if="alert.totals?.alerting && alert.totals.alerting >= 1" class="total-chip alerting-chip">
+            {{ alert.totals.alerting }}
+          </span>
+          <span v-if="alert.totals?.normal && alert.totals.normal >= 1" class="total-chip normal-chip">
+            {{ alert.totals.normal }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -53,6 +60,10 @@ interface Props {
     url: string
     labels?: Record<string, string>
     instanceName?: string
+    totals?: {
+      alerting: number;
+      normal: number;
+    };
   }
   fontSize?: number
 }
@@ -231,10 +242,37 @@ const getDuration = (dateString: string): string => {
   font-weight: 500;
 }
 
+.totals-chips {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.total-chip {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.alerting-chip {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border-color: rgba(244, 67, 54, 0.4);
+}
+
+.normal-chip {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
 .alert-footer {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  /*border-top: 1px solid rgba(255, 255, 255, 0.1);*/
 }
 
 .view-link {
