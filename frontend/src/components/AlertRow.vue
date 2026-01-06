@@ -12,6 +12,14 @@
     <div class="alert-group">
       {{ alert.ruleGroup }}
     </div>
+    <div class="alert-totals">
+      <span v-if="alert.totals?.alerting && alert.totals.alerting >= 1" class="total-chip alerting-chip">
+        {{ alert.totals.alerting }}
+      </span>
+      <span v-if="alert.totals?.normal && alert.totals.normal >= 1" class="total-chip normal-chip">
+        {{ alert.totals.normal }}
+      </span>
+    </div>
     <div class="alert-labels">
       <span v-for="(value, key) in alert.labels" :key="key" class="label-tag">
         {{ key }}: {{ value }}
@@ -39,6 +47,10 @@ interface Props {
     ruleGroup: string
     labels?: Record<string, string>
     instanceName?: string
+    totals?: {
+      alerting: number;
+      normal: number;
+    };
   }
   fontSize?: number
 }
@@ -76,7 +88,7 @@ const getDuration = (dateString: string): string => {
 <style scoped>
 .alert-row {
   display: grid;
-  grid-template-columns: 50px 1fr 200px 300px 100px 60px;
+  grid-template-columns: 50px 1fr 200px 80px 300px 100px 60px;
   align-items: center;
   padding: 0.75rem 1.5rem;
   background: rgba(255, 255, 255, 0.03);
@@ -141,6 +153,13 @@ const getDuration = (dateString: string): string => {
   color: #2196f3;
 }
 
+.alert-totals {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .alert-name {
   font-weight: 500;
   overflow: hidden;
@@ -191,6 +210,28 @@ const getDuration = (dateString: string): string => {
   white-space: nowrap;
 }
 
+.total-chip {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.alerting-chip {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border-color: rgba(244, 67, 54, 0.4);
+}
+
+.normal-chip {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
 .alert-duration {
   font-size: 0.9rem;
   color: #ccc;
@@ -222,7 +263,7 @@ const getDuration = (dateString: string): string => {
 
 @media (max-width: 1024px) {
   .alert-row {
-    grid-template-columns: 40px 1fr 80px 50px;
+    grid-template-columns: 40px 1fr 80px 80px 50px;
   }
   
   .alert-group,
@@ -237,6 +278,7 @@ const getDuration = (dateString: string): string => {
     padding: 0.5rem 1rem;
   }
   
+  .alert-totals,
   .alert-duration {
     display: none;
   }
