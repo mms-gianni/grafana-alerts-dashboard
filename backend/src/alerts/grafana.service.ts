@@ -51,6 +51,43 @@ export interface GrafanaSilence {
   };
 }
 
+export interface PrometheusRule {
+  name: string;
+  query: string;
+  duration: number;
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  state: 'firing' | 'pending' | 'inactive';
+  health: string;
+  lastError?: string;
+  evaluationTime: number;
+  lastEvaluation: string;
+  alerts?: Array<{
+    labels: Record<string, string>;
+    annotations: Record<string, string>;
+    state: 'firing' | 'pending';
+    activeAt: string;
+    value: string;
+  }>;
+}
+
+export interface PrometheusRuleGroup {
+  name: string;
+  file: string;
+  rules: PrometheusRule[];
+  interval: number;
+  limit: number;
+  evaluationTime: number;
+  lastEvaluation: string;
+}
+
+export interface PrometheusRulesResponse {
+  status: string;
+  data: {
+    groups: PrometheusRuleGroup[];
+  };
+}
+
 @Injectable()
 export class GrafanaService {
   private readonly logger = new Logger(GrafanaService.name);
@@ -112,26 +149,42 @@ export class GrafanaService {
     }
   }
 
-  private transformAlertToDisplay(alert: GrafanaAlert, instanceName: string, instanceUrl: string): DisplayAlert {
-    // Determine state based on Grafana alert rule properties
+  private transformAlertToDisplay(
+    alert: GrafanaAlert,
+    instanceName: string,
+    instanceUrl: string,
+    prometheusRule?: PrometheusRule
+  ): DisplayAlert {
+    // Determine state based on actual Prometheus rule state if available
     let state: DisplayAlert['state'] = 'ok';
+    let stateDate = alert.updated;
     
     if (alert.isPaused) {
       state = 'paused';
-    } else if (alert.noDataState === 'Alerting') {
-      state = 'no_data';
-    } else if (alert.execErrState === 'Alerting') {
-      state = 'alerting';
+    } else if (prometheusRule) {
+      // Use actual state from Prometheus API
+      if (prometheusRule.state === 'firing') {
+        state = 'alerting';
+        // Use first alert's activeAt if available
+        if (prometheusRule.alerts && prometheusRule.alerts.length > 0) {
+          stateDate = prometheusRule.alerts[0].activeAt;
+        }
+      } else if (prometheusRule.state === 'pending') {
+        state = 'pending';
+        if (prometheusRule.alerts && prometheusRule.alerts.length > 0) {
+          stateDate = prometheusRule.alerts[0].activeAt;
+        }
+      } else if (prometheusRule.state === 'inactive') {
+        state = 'ok';
+      }
     }
-    // Note: Grafana alert rules don't have real-time state in the provisioning API
-    // You may need to use the alertmanager API for actual firing alerts
     
     return {
       id: alert.id,
       uid: alert.uid,
       name: alert.title,
       state,
-      newStateDate: alert.updated,
+      newStateDate: stateDate,
       url: `${instanceUrl}/alerting/grafana/${alert.uid}/view`,
       ruleGroup: alert.ruleGroup,
       folderUID: alert.folderUID,
@@ -151,17 +204,19 @@ export class GrafanaService {
       
       try {
         this.logger.debug(`Fetching alerts from ${instance.name}: ${fullUrl}`);
-        const [alertsResponse, silences] = await Promise.all([
+        const [alertsResponse, silences, prometheusRules] = await Promise.all([
           instance.axiosInstance.get(endpoint),
           this.getSilencesForInstance(instance),
+          this.getPrometheusRulesForInstance(instance),
         ]);
         
         const alerts: GrafanaAlert[] = alertsResponse.data || [];
-        this.logger.log(`Successfully fetched ${alerts.length} alert rules and ${silences.length} active silences from ${instance.name}`);
+        this.logger.log(`Successfully fetched ${alerts.length} alert rules, ${silences.length} active silences, and ${prometheusRules.size} Prometheus rules from ${instance.name}`);
         
         // Transform to display format and mark silenced alerts
         return alerts.map(alert => {
-          const displayAlert = this.transformAlertToDisplay(alert, instance.name, instance.url);
+          const prometheusRule = prometheusRules.get(alert.title);
+          const displayAlert = this.transformAlertToDisplay(alert, instance.name, instance.url, prometheusRule);
           displayAlert.isSilenced = this.isAlertSilenced(alert, silences);
           return displayAlert;
         });
@@ -186,6 +241,53 @@ export class GrafanaService {
 
     this.logger.log(`Total alerts from all instances: ${allAlerts.length}`);
     return allAlerts;
+  }
+
+  private async getPrometheusRulesForInstance(instance: { name: string; url: string; axiosInstance: AxiosInstance }): Promise<Map<string, PrometheusRule>> {
+    // Try both API endpoints - newer versions use prometheus, older versions use ruler
+    const endpoints = [
+      '/api/prometheus/grafana/api/v1/rules',
+      '/api/ruler/grafana/api/v1/rules?subtype=cortex'
+    ];
+    
+    for (const endpoint of endpoints) {
+      const fullUrl = `${instance.url}${endpoint}`;
+      
+      try {
+        this.logger.debug(`Fetching Prometheus rules from ${instance.name}: ${fullUrl}`);
+        const response = await instance.axiosInstance.get(endpoint);
+        
+        // Handle Prometheus API response format
+        let groups: PrometheusRuleGroup[] = [];
+        if (response.data.status === 'success' && response.data.data?.groups) {
+          groups = response.data.data.groups;
+        } else if (Array.isArray(response.data)) {
+          // Ruler API might return array directly
+          groups = response.data;
+        }
+        
+        // Create map of rules by alert name for quick lookup
+        const rulesMap = new Map<string, PrometheusRule>();
+        groups.forEach(group => {
+          group.rules?.forEach(rule => {
+            if (rule.name) {
+              rulesMap.set(rule.name, rule);
+            }
+          });
+        });
+        
+        this.logger.log(`Successfully fetched ${rulesMap.size} Prometheus rules from ${instance.name} using ${endpoint}`);
+        return rulesMap;
+      } catch (error) {
+        this.logger.debug(
+          `Failed to fetch Prometheus rules from ${endpoint} on ${instance.name}: ${error.message}`
+        );
+        // Continue to next endpoint
+      }
+    }
+    
+    this.logger.warn(`Could not fetch Prometheus rules from ${instance.name} using any endpoint (non-critical)`);
+    return new Map();
   }
 
   private async getSilencesForInstance(instance: { name: string; url: string; axiosInstance: AxiosInstance }): Promise<GrafanaSilence[]> {
