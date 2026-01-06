@@ -53,6 +53,27 @@
         </MultiSelect>
       </div>
 
+      <div class="drawer-section" v-if="availableLabels.length > 0">
+        <h3 class="drawer-section-title">Filter by Labels</h3>
+        <MultiSelect
+          id="label-filter"
+          :modelValue="selectedLabels"
+          @update:modelValue="$emit('update:selectedLabels', $event)"
+          :options="availableLabels"
+          placeholder="All labels"
+          display="chip"
+          :maxSelectedLabels="3"
+          class="label-filter"
+        >
+          <template #option="slotProps">
+            <div class="filter-option">
+              <i class="pi pi-tag" style="color: #64b5f6"></i>
+              <span>{{ slotProps.option }}</span>
+            </div>
+          </template>
+        </MultiSelect>
+      </div>
+
       <div class="drawer-section">
         <h3 class="drawer-section-title">Text Size</h3>
         <div class="size-control">
@@ -135,11 +156,13 @@ interface Props {
   visible: boolean
   selectedStates: string[]
   selectedInstances: string[]
+  selectedLabels: string[]
   showSilenced: boolean
   fontSize: number
   viewMode: 'compact' | 'grid'
   theme: 'light' | 'system' | 'dark'
   availableInstances: string[]
+  availableLabels: string[]
 }
 
 const props = defineProps<Props>()
@@ -148,6 +171,7 @@ const emit = defineEmits<{
   'update:visible': [value: boolean]
   'update:selectedStates': [value: string[]]
   'update:selectedInstances': [value: string[]]
+  'update:selectedLabels': [value: string[]]
   'update:showSilenced': [value: boolean]
   'update:fontSize': [value: number]
   'update:viewMode': [value: 'compact' | 'grid']

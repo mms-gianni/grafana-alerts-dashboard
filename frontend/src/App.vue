@@ -65,11 +65,13 @@
       v-model:visible="showSidebar"
       v-model:selectedStates="selectedStates"
       v-model:selectedInstances="selectedInstances"
+      v-model:selectedLabels="selectedLabels"
       v-model:showSilenced="showSilenced"
       v-model:fontSize="fontSize"
       v-model:viewMode="viewMode"
       v-model:theme="theme"
       :availableInstances="availableInstances"
+      :availableLabels="availableLabels"
     />
 
     <div class="alerts-container">
@@ -173,6 +175,7 @@ const saveSettings = () => {
     viewMode: viewMode.value,
     selectedStates: selectedStates.value,
     selectedInstances: selectedInstances.value,
+    selectedLabels: selectedLabels.value,
     fontSize: fontSize.value,
     showSilenced: showSilenced.value,
     theme: theme.value
@@ -191,6 +194,7 @@ const connectionStatus = ref({ connected: false, text: 'Connecting...' })
 const viewMode = ref<'compact' | 'grid'>(savedSettings?.viewMode || 'compact')
 const selectedStates = ref<string[]>(savedSettings?.selectedStates || ['alerting', 'pending', 'no_data', 'paused', 'ok'])
 const selectedInstances = ref<string[]>(savedSettings?.selectedInstances || [])
+const selectedLabels = ref<string[]>(savedSettings?.selectedLabels || [])
 const fontSize = ref(savedSettings?.fontSize || 2)
 const showSilenced = ref(savedSettings?.showSilenced ?? true)
 const showSidebar = ref(false)
@@ -233,6 +237,18 @@ const availableInstances = computed(() => {
   return Array.from(instances).sort()
 })
 
+const availableLabels = computed(() => {
+  const labels = new Set<string>()
+  alerts.value.forEach(alert => {
+    if (alert.labels) {
+      Object.entries(alert.labels).forEach(([key, value]) => {
+        labels.add(`${key}:${value}`)
+      })
+    }
+  })
+  return Array.from(labels).sort()
+})
+
 const sortedAlerts = computed(() => {
   const stateOrder = { alerting: 0, pending: 1, no_data: 2, paused: 3, ok: 4 }
   
@@ -244,6 +260,16 @@ const sortedAlerts = computed(() => {
       if (selectedInstances.value.length === 0) return true
       // Filter by selected instances
       return selectedInstances.value.includes(alert.instanceName || 'default')
+    })
+    .filter(alert => {
+      // If no labels selected, show all
+      if (selectedLabels.value.length === 0) return true
+      // Check if alert has any of the selected labels
+      if (!alert.labels) return false
+      return selectedLabels.value.some(selectedLabel => {
+        const [key, value] = selectedLabel.split(':')
+        return alert.labels![key] === value
+      })
     })
     .sort((a, b) => stateOrder[a.state] - stateOrder[b.state])
 
