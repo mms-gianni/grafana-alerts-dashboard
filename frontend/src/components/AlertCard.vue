@@ -1,5 +1,5 @@
 <template>
-  <div :class="['alert-card', `alert-${alert.state}`]">
+  <div :class="['alert-card', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced }]">
     <div class="alert-header">
       <div class="alert-icon" :style="{ fontSize: `${fontSize}rem`, width: `${fontSize * 24}px`, height: `${fontSize * 24}px` }">
         <i :class="getStateIcon(alert.state)"></i>
@@ -60,6 +60,7 @@ interface Props {
     url: string
     labels?: Record<string, string>
     instanceName?: string
+    isSilenced?: boolean
     totals?: {
       alerting: number;
       normal: number;
@@ -141,6 +142,20 @@ const getDuration = (dateString: string): string => {
 .alert-no_data {
   border-left-color: #2196f3;
   background: rgba(33, 150, 243, 0.1);
+}
+
+.alert-silenced {
+  opacity: 0.6;
+}
+
+.alert-silenced .alert-title h3,
+.alert-silenced .alert-details,
+.alert-silenced .alert-labels {
+  color: #9e9e9e !important;
+}
+
+.alert-silenced .alert-icon i {
+  color: #757575 !important;
 }
 
 .alert-header {

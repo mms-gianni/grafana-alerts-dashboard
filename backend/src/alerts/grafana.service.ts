@@ -62,6 +62,21 @@ export interface GrafanaSilence {
   };
 }
 
+export interface AlertmanagerAlert {
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  startsAt: string;
+  endsAt: string;
+  updatedAt: string;
+  fingerprint: string;
+  receivers: Array<{ name: string }>;
+  status: {
+    state: 'unprocessed' | 'active' | 'suppressed';
+    silencedBy: string[];
+    inhibitedBy: string[];
+  };
+}
+
 export interface PrometheusRule {
   name: string;
   query: string;
@@ -221,20 +236,22 @@ export class GrafanaService {
       
       try {
         this.logger.debug(`Fetching alerts from ${instance.name}: ${fullUrl}`);
-        const [alertsResponse, silences, prometheusRules] = await Promise.all([
+        const [alertsResponse, alertmanagerAlerts, prometheusRules] = await Promise.all([
           instance.axiosInstance.get(endpoint),
-          this.getSilencesForInstance(instance),
+          this.getAlertmanagerAlertsForInstance(instance),
           this.getPrometheusRulesForInstance(instance),
         ]);
         
         const alerts: GrafanaAlert[] = alertsResponse.data || [];
-        this.logger.log(`Successfully fetched ${alerts.length} alert rules, ${silences.length} active silences, and ${prometheusRules.size} Prometheus rules from ${instance.name}`);
+        this.logger.log(`Successfully fetched ${alerts.length} alert rules, ${alertmanagerAlerts.size} alertmanager alerts, and ${prometheusRules.size} Prometheus rules from ${instance.name}`);
         
         // Transform to display format and mark silenced alerts
         return alerts.map(alert => {
           const prometheusRule = prometheusRules.get(alert.title);
+          const alertmanagerAlert = alertmanagerAlerts.get(alert.title);
           const displayAlert = this.transformAlertToDisplay(alert, instance.name, instance.url, prometheusRule);
-          displayAlert.isSilenced = this.isAlertSilenced(alert, silences);
+          // Check if alert is silenced from alertmanager data
+          displayAlert.isSilenced = alertmanagerAlert?.status?.silencedBy?.length > 0 || false;
           return displayAlert;
         });
       } catch (error) {
@@ -307,6 +324,37 @@ export class GrafanaService {
     return new Map();
   }
 
+  private async getAlertmanagerAlertsForInstance(instance: { name: string; url: string; axiosInstance: AxiosInstance }): Promise<Map<string, AlertmanagerAlert>> {
+    const endpoint = '/api/alertmanager/grafana/api/v2/alerts';
+    const fullUrl = `${instance.url}${endpoint}`;
+    
+    try {
+      this.logger.debug(`Fetching alertmanager alerts from ${instance.name}: ${fullUrl}`);
+      const response = await instance.axiosInstance.get(endpoint);
+      const alerts: AlertmanagerAlert[] = response.data || [];
+      
+      // Create map by alert rule name (alertname label)
+      const alertsMap = new Map<string, AlertmanagerAlert>();
+      alerts.forEach(alert => {
+        const alertName = alert.labels.alertname;
+        if (alertName) {
+          alertsMap.set(alertName, alert);
+        }
+      });
+      
+      this.logger.log(`Successfully fetched ${alerts.length} alertmanager alerts from ${instance.name}`);
+      return alertsMap;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to fetch alertmanager alerts from ${instance.name} (non-critical)\n` +
+        `  URL: ${fullUrl}\n` +
+        `  Status: ${error.response?.status || 'N/A'}\n` +
+        `  Error Message: ${error.message}`
+      );
+      return new Map();
+    }
+  }
+
   private async getSilencesForInstance(instance: { name: string; url: string; axiosInstance: AxiosInstance }): Promise<GrafanaSilence[]> {
     const endpoint = '/api/alertmanager/grafana/api/v2/silences';
     const fullUrl = `${instance.url}${endpoint}`;
@@ -336,28 +384,6 @@ export class GrafanaService {
       // Return empty array if silences can't be fetched (non-critical)
       return [];
     }
-  }
-
-  isAlertSilenced(alert: GrafanaAlert, silences: GrafanaSilence[]): boolean {
-    return silences.some(silence => {
-      // Check if all matchers match the alert's labels
-      return silence.matchers.every(matcher => {
-        const labelValue = alert.labels?.[matcher.name];
-        if (!labelValue) return false;
-
-        if (matcher.isRegex) {
-          try {
-            const regex = new RegExp(matcher.value);
-            return regex.test(labelValue);
-          } catch (e) {
-            this.logger.warn(`Invalid regex in silence matcher: ${matcher.value}`);
-            return false;
-          }
-        } else {
-          return labelValue === matcher.value;
-        }
-      });
-    });
   }
 
   async getAlerts(): Promise<DisplayAlert[]> {
