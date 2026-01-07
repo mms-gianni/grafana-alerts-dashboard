@@ -187,7 +187,7 @@ const stateOptions = [
   { label: 'Alerting', value: 'alerting', icon: 'pi pi-exclamation-triangle', color: '#f44336' },
   { label: 'Pending', value: 'pending', icon: 'pi pi-clock', color: '#ff9800' },
   { label: 'No Data', value: 'no_data', icon: 'pi pi-question-circle', color: '#2196f3' },
-  { label: 'Paused', value: 'paused', icon: 'pi pi-pause-circle', color: '#9e9e9e' },
+  { label: 'Paused', value: 'paused', icon: 'pi pi-times-circle', color: '#9e9e9e' },
   { label: 'OK', value: 'ok', icon: 'pi pi-check-circle', color: '#4caf50' },
 ]
 </script>

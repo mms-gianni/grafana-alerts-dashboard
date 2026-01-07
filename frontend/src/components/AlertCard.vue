@@ -77,7 +77,7 @@ const getStateIcon = (state: string): string => {
     alerting: 'pi pi-exclamation-triangle',
     pending: 'pi pi-clock',
     ok: 'pi pi-check-circle',
-    paused: 'pi pi-pause-circle',
+    paused: 'pi pi-times-circle',
     no_data: 'pi pi-question-circle',
   }
   return icons[state] || 'pi pi-info-circle'
