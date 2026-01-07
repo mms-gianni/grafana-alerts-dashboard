@@ -27,6 +27,20 @@
             <span>{{ noDataCount }}</span>
           </div>
         </div>
+        <div class="stat paused">
+          <span class="stat-label">Paused:</span>
+          <div class="stat-value">
+            <i class="pi pi-times-circle"></i>
+            <span>{{ pausedCount }}</span>
+          </div>
+        </div>
+        <div class="stat silenced">
+          <span class="stat-label">Silenced:</span>
+          <div class="stat-value">
+            <i class="pi pi-volume-off"></i>
+            <span>{{ silencedCount }}</span>
+          </div>
+        </div>
         <div class="stat ok">
           <span class="stat-label">OK:</span>
           <div class="stat-value">
@@ -66,7 +80,6 @@
       v-model:selectedStates="selectedStates"
       v-model:selectedInstances="selectedInstances"
       v-model:selectedLabels="selectedLabels"
-      v-model:showSilenced="showSilenced"
       v-model:fontSize="fontSize"
       v-model:viewMode="viewMode"
       v-model:theme="theme"
@@ -178,7 +191,6 @@ const saveSettings = () => {
     selectedInstances: selectedInstances.value,
     selectedLabels: selectedLabels.value,
     fontSize: fontSize.value,
-    showSilenced: showSilenced.value,
     theme: theme.value
   }
   setCookie('alertsSettings', encodeURIComponent(JSON.stringify(settings)))
@@ -193,11 +205,10 @@ const error = ref<string | null>(null)
 const lastUpdate = ref('Never')
 const connectionStatus = ref({ connected: false, text: 'Connecting...' })
 const viewMode = ref<'compact' | 'grid'>(savedSettings?.viewMode || 'compact')
-const selectedStates = ref<string[]>(savedSettings?.selectedStates || ['alerting', 'pending', 'no_data', 'paused', 'ok'])
+const selectedStates = ref<string[]>(savedSettings?.selectedStates || ['alerting', 'pending', 'no_data', 'paused', 'silenced', 'ok'])
 const selectedInstances = ref<string[]>(savedSettings?.selectedInstances || [])
 const selectedLabels = ref<string[]>(savedSettings?.selectedLabels || [])
 const fontSize = ref(savedSettings?.fontSize || 2)
-const showSilenced = ref(savedSettings?.showSilenced ?? true)
 const showSidebar = ref(false)
 const refreshing = ref(false)
 const theme = ref<'light' | 'system' | 'dark'>(savedSettings?.theme || 'dark')
@@ -251,11 +262,16 @@ const availableLabels = computed(() => {
 })
 
 const sortedAlerts = computed(() => {
-  const stateOrder = { alerting: 0, pending: 1, no_data: 2, paused: 3, ok: 4 }
+  const stateOrder = { alerting: 0, pending: 1, no_data: 2, paused: 3, silenced: 4, ok: 5 }
   
   let filtered = [...alerts.value]
-    .filter(alert => selectedStates.value.includes(alert.state))
-    .filter(alert => showSilenced.value || !alert.isSilenced)
+    .filter(alert => {
+      // Check if alert state is selected
+      if (selectedStates.value.includes(alert.state)) return true
+      // Check if silenced is selected and alert is silenced
+      if (selectedStates.value.includes('silenced') && alert.isSilenced) return true
+      return false
+    })
     .filter(alert => {
       // If no instances selected, show all
       if (selectedInstances.value.length === 0) return true
@@ -272,7 +288,11 @@ const sortedAlerts = computed(() => {
         return alert.labels![key] === value
       })
     })
-    .sort((a, b) => stateOrder[a.state] - stateOrder[b.state])
+    .sort((a, b) => {
+      const aOrder = stateOrder[a.state] ?? 99
+      const bOrder = stateOrder[b.state] ?? 99
+      return aOrder - bOrder
+    })
 
   return filtered
 })
@@ -280,6 +300,8 @@ const sortedAlerts = computed(() => {
 const alertingCount = computed(() => alerts.value.filter(a => a.state === 'alerting').length)
 const pendingCount = computed(() => alerts.value.filter(a => a.state === 'pending').length)
 const noDataCount = computed(() => alerts.value.filter(a => a.state === 'no_data').length)
+const pausedCount = computed(() => alerts.value.filter(a => a.state === 'paused').length)
+const silencedCount = computed(() => alerts.value.filter(a => a.isSilenced).length)
 const okCount = computed(() => alerts.value.filter(a => a.state === 'ok').length)
 
 const updateLastUpdate = () => {
@@ -616,6 +638,22 @@ onUnmounted(() => {
 
 .stat.no-data .stat-value i {
   color: #2196f3;
+}
+
+.stat.paused .stat-value {
+  color: #9e9e9e;
+}
+
+.stat.paused .stat-value i {
+  color: #9e9e9e;
+}
+
+.stat.silenced .stat-value {
+  color: #757575;
+}
+
+.stat.silenced .stat-value i {
+  color: #757575;
 }
 
 .stat.ok .stat-value {

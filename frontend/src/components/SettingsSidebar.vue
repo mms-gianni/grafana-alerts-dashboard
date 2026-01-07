@@ -21,16 +21,6 @@
             </div>
           </template>
         </MultiSelect>
-        <div class="silence-filter">
-          <label class="silence-toggle">
-            <input 
-              type="checkbox" 
-              :checked="showSilenced"
-              @change="$emit('update:showSilenced', ($event.target as HTMLInputElement).checked)"
-            />
-            <span>Show silenced alerts</span>
-          </label>
-        </div>
       </div>
 
       <div class="drawer-section" v-if="availableInstances.length > 0">
@@ -157,7 +147,6 @@ interface Props {
   selectedStates: string[]
   selectedInstances: string[]
   selectedLabels: string[]
-  showSilenced: boolean
   fontSize: number
   viewMode: 'compact' | 'grid'
   theme: 'light' | 'system' | 'dark'
@@ -172,7 +161,6 @@ const emit = defineEmits<{
   'update:selectedStates': [value: string[]]
   'update:selectedInstances': [value: string[]]
   'update:selectedLabels': [value: string[]]
-  'update:showSilenced': [value: boolean]
   'update:fontSize': [value: number]
   'update:viewMode': [value: 'compact' | 'grid']
   'update:theme': [value: 'light' | 'system' | 'dark']
@@ -188,6 +176,7 @@ const stateOptions = [
   { label: 'Pending', value: 'pending', icon: 'pi pi-clock', color: '#ff9800' },
   { label: 'No Data', value: 'no_data', icon: 'pi pi-question-circle', color: '#2196f3' },
   { label: 'Paused', value: 'paused', icon: 'pi pi-times-circle', color: '#9e9e9e' },
+  { label: 'Silenced', value: 'silenced', icon: 'pi pi-volume-off', color: '#757575' },
   { label: 'OK', value: 'ok', icon: 'pi pi-check-circle', color: '#4caf50' },
 ]
 </script>
@@ -245,32 +234,6 @@ const stateOptions = [
 
 .instance-filter {
   width: 100%;
-}
-
-.silence-filter {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.silence-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  color: #ccc;
-  font-size: 0.9rem;
-}
-
-.silence-toggle input[type="checkbox"] {
-  cursor: pointer;
-  width: 16px;
-  height: 16px;
-  accent-color: #64b5f6;
-}
-
-.silence-toggle:hover {
-  color: #fff;
 }
 
 .size-control {
