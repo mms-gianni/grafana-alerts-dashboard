@@ -266,10 +266,10 @@ const sortedAlerts = computed(() => {
   
   let filtered = [...alerts.value]
     .filter(alert => {
-      // Check if alert state is selected
-      if (selectedStates.value.includes(alert.state)) return true
-      // Check if silenced is selected and alert is silenced
-      if (selectedStates.value.includes('silenced') && alert.isSilenced) return true
+      // Show silenced alerts if 'silenced' is selected
+      if (alert.isSilenced && selectedStates.value.includes('silenced')) return true
+      // Show non-silenced alerts if their state is selected
+      if (!alert.isSilenced && selectedStates.value.includes(alert.state)) return true
       return false
     })
     .filter(alert => {
