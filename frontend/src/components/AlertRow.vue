@@ -1,7 +1,7 @@
 <template>
   <div>
     <div 
-      :class="['alert-row', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced, 'has-subalerts': alert.alerts && alert.alerts.length > 0 }]"
+      :class="['alert-row', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced, 'has-subalerts': alert.alerts && alert.alerts.length > 0, 'new-alert': isNew }]"
       @click="toggleAccordion"
     >
       <div class="alert-icon" :style="{ fontSize: `${fontSize}rem` }">
@@ -63,11 +63,13 @@ interface Props {
   alert: GrafanaAlert
   fontSize?: number
   showNormalSubalerts?: boolean
+  isNew?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   fontSize: 2,
-  showNormalSubalerts: false
+  showNormalSubalerts: false,
+  isNew: false
 })
 
 const expanded = ref(false)
@@ -130,6 +132,20 @@ const toggleAccordion = () => {
 
 .alert-silenced {
   opacity: 0.5;
+}
+
+.new-alert {
+  animation: flashAlert 2s ease-in-out 3;
+  position: relative;
+}
+
+@keyframes flashAlert {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(255, 193, 7, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.8), inset 0 0 20px rgba(255, 193, 7, 0.3);
+  }
 }
 
 .alert-silenced .alert-name,

@@ -1,5 +1,5 @@
 <template>
-  <div :class="['alert-card', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced }]">
+  <div :class="['alert-card', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced, 'new-alert': isNew }]">
     <div class="alert-header">
       <div class="alert-icon" :style="{ fontSize: `${fontSize}rem`, width: `${fontSize * 24}px`, height: `${fontSize * 24}px` }">
         <i :class="getStateIcon(alert.state)"></i>
@@ -77,11 +77,13 @@ interface Props {
   alert: GrafanaAlert
   fontSize?: number
   showNormalSubalerts?: boolean
+  isNew?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   fontSize: 2,
-  showNormalSubalerts: false
+  showNormalSubalerts: false,
+  isNew: false
 })
 
 const expanded = ref(false)
@@ -140,6 +142,22 @@ const toggleExpanded = () => {
 
 .alert-silenced {
   opacity: 0.6;
+}
+
+.new-alert {
+  animation: flashAlert 2s ease-in-out 3;
+  position: relative;
+}
+
+@keyframes flashAlert {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(255, 193, 7, 0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 193, 7, 0.8), inset 0 0 30px rgba(255, 193, 7, 0.3);
+    transform: scale(1.02);
+  }
 }
 
 .alert-silenced .alert-title h3,

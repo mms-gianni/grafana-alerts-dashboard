@@ -120,6 +120,7 @@
           :alert="alert"
           :fontSize="fontSize"
           :showNormalSubalerts="showNormalSubalerts"
+          :isNew="newAlertIds.has(alert.id)"
         />
       </div>
 
@@ -130,6 +131,7 @@
           :alert="alert"
           :fontSize="fontSize"
           :showNormalSubalerts="showNormalSubalerts"
+          :isNew="newAlertIds.has(alert.id)"
         />
       </div>
     </div>
@@ -192,6 +194,8 @@ const saveSettings = () => {
 const savedSettings = loadSettings()
 
 const alerts = ref<GrafanaAlert[]>([])
+const newAlertIds = ref<Set<number>>(new Set())
+const previousAlertStates = ref<Map<number, string>>(new Map())
 const loading = ref(true)
 const error = ref<string | null>(null)
 const lastUpdate = ref('Never')
@@ -327,6 +331,26 @@ onMounted(() => {
   })
 
   socket.on('alerts', (data: GrafanaAlert[]) => {
+    const newIds = new Set<number>()
+    
+    data.forEach(alert => {
+      const previousState = previousAlertStates.value.get(alert.id)
+      
+      // Mark as new if it's a new alert or state changed to alerting/pending
+      if (!previousState || 
+          (previousState !== alert.state && 
+           (alert.state === 'alerting' || alert.state === 'pending'))) {
+        newIds.add(alert.id)
+        // Remove from new alerts after 10 seconds
+        setTimeout(() => {
+          newAlertIds.value.delete(alert.id)
+        }, 10000)
+      }
+      
+      previousAlertStates.value.set(alert.id, alert.state)
+    })
+    
+    newAlertIds.value = newIds
     alerts.value = data
     loading.value = false
     error.value = null
