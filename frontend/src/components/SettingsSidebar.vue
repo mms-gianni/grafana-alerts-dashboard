@@ -81,6 +81,20 @@
           <i class="pi pi-search-plus"></i>
         </div>
       </div>
+      
+      <div class="drawer-section">
+        <h3 class="drawer-section-title">Sub-Alerts</h3>
+        <div class="switch-control">
+          <label for="show-normal-subalerts" class="switch-label">
+            <span>Show Normal State</span>
+            <InputSwitch 
+              id="show-normal-subalerts"
+              :modelValue="showNormalSubalerts"
+              @update:modelValue="$emit('update:showNormalSubalerts', $event)"
+            />
+          </label>
+        </div>
+      </div>
 
       <div class="drawer-section">
         <h3 class="drawer-section-title">Theme</h3>
@@ -133,6 +147,7 @@
           </button>
         </div>
       </div>
+
     </div>
   </Sidebar>
 </template>
@@ -141,6 +156,7 @@
 import { computed } from 'vue'
 import Sidebar from 'primevue/sidebar'
 import MultiSelect from 'primevue/multiselect'
+import InputSwitch from 'primevue/inputswitch'
 
 interface Props {
   visible: boolean
@@ -152,6 +168,7 @@ interface Props {
   theme: 'light' | 'system' | 'dark'
   availableInstances: string[]
   availableLabels: string[]
+  showNormalSubalerts: boolean
 }
 
 const props = defineProps<Props>()
@@ -164,6 +181,7 @@ const emit = defineEmits<{
   'update:fontSize': [value: number]
   'update:viewMode': [value: 'compact' | 'grid']
   'update:theme': [value: 'light' | 'system' | 'dark']
+  'update:showNormalSubalerts': [value: boolean]
 }>()
 
 const isVisible = computed({
@@ -319,5 +337,23 @@ const stateOptions = [
   background: rgba(100, 181, 246, 0.3);
   color: #64b5f6;
   border: 1px solid rgba(100, 181, 246, 0.5);
+}
+
+.switch-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.switch-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.switch-label span {
+  color: #ccc;
 }
 </style>

@@ -1,42 +1,93 @@
 <template>
-  <div :class="['alert-row', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced }]">
-    <div class="alert-icon" :style="{ fontSize: `${fontSize}rem` }">
-      <i :class="getStateIcon(alert.state)"></i>
+  <div>
+    <div 
+      :class="['alert-row', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced, 'has-subalerts': alert.alerts && alert.alerts.length > 0 }]"
+      @click="toggleAccordion"
+    >
+      <div class="alert-icon" :style="{ fontSize: `${fontSize}rem` }">
+        <i :class="getStateIcon(alert.state)"></i>
+      </div>
+      <div class="alert-name" :style="{ fontSize: `${fontSize}rem` }">
+        {{ alert.name }}
+        <span v-if="alert.instanceName && alert.instanceName !== 'default'" class="instance-badge">
+          {{ alert.instanceName }}
+        </span>
+      </div>
+      <div class="alert-group">
+        {{ alert.ruleGroup }}
+      </div>
+      <div class="alert-totals">
+        <span v-if="alert.totals?.alerting && alert.totals.alerting >= 1" class="total-chip alerting-chip">
+          {{ alert.totals.alerting }}
+        </span>
+        <span v-if="alert.totals?.normal && alert.totals.normal >= 1" class="total-chip normal-chip">
+          {{ alert.totals.normal }}
+        </span>
+      </div>
+      <div class="alert-labels">
+        <span v-for="(value, key) in alert.labels" :key="key" class="label-tag">
+          {{ key }}: {{ value }}
+        </span>
+      </div>
+      <div class="alert-duration">
+        {{ getDuration(alert.newStateDate) }}
+      </div>
+      <div class="alert-actions">
+        <a :href="alert.url" target="_blank" class="view-link" title="View in Grafana" @click.stop>
+          <i class="pi pi-external-link"></i>
+        </a>
+      </div>
     </div>
-    <div class="alert-name" :style="{ fontSize: `${fontSize}rem` }">
-      {{ alert.name }}
-      <span v-if="alert.instanceName && alert.instanceName !== 'default'" class="instance-badge">
-        {{ alert.instanceName }}
-      </span>
-    </div>
-    <div class="alert-group">
-      {{ alert.ruleGroup }}
-    </div>
-    <div class="alert-totals">
-      <span v-if="alert.totals?.alerting && alert.totals.alerting >= 1" class="total-chip alerting-chip">
-        {{ alert.totals.alerting }}
-      </span>
-      <span v-if="alert.totals?.normal && alert.totals.normal >= 1" class="total-chip normal-chip">
-        {{ alert.totals.normal }}
-      </span>
-    </div>
-    <div class="alert-labels">
-      <span v-for="(value, key) in alert.labels" :key="key" class="label-tag">
-        {{ key }}: {{ value }}
-      </span>
-    </div>
-    <div class="alert-duration">
-      {{ getDuration(alert.newStateDate) }}
-    </div>
-    <div class="alert-actions">
-      <a :href="alert.url" target="_blank" class="view-link" title="View in Grafana">
-        <i class="pi pi-external-link"></i>
-      </a>
+    
+    <div v-if="expanded && filteredSubAlerts.length > 0" class="sub-alerts-container">
+      <Accordion :multiple="true">
+        <AccordionTab 
+          v-for="(subAlert, index) in filteredSubAlerts" 
+          :key="index"
+        >
+          <template #header>
+            <div class="sub-alert-header">
+              <i :class="['pi', subAlert.state === 'Alerting' ? 'pi-exclamation-triangle' : 'pi-check-circle', subAlert.state === 'Alerting' ? 'text-alerting' : 'text-ok']"></i>
+              <span class="sub-alert-state">{{ subAlert.state }}</span>
+              <span class="sub-alert-value">Value: {{ subAlert.value }}</span>
+            </div>
+          </template>
+          <div class="sub-alert-details">
+            <div v-if="Object.keys(subAlert.labels).length > 0" class="detail-section">
+              <h4>Labels:</h4>
+              <div class="sub-labels">
+                <span v-for="(value, key) in subAlert.labels" :key="key" class="label-tag">
+                  {{ key }}: {{ value }}
+                </span>
+              </div>
+            </div>
+            
+            <div v-if="Object.keys(subAlert.annotations).length > 0" class="detail-section">
+              <h4>Annotations:</h4>
+              <div class="sub-annotations">
+                <div v-for="(value, key) in subAlert.annotations" :key="key" class="annotation-row">
+                  <span class="annotation-key">{{ key }}:</span>
+                  <span class="annotation-value">{{ value }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="detail-section">
+              <span class="detail-label">Active since:</span>
+              <span class="detail-value">{{ formatDate(subAlert.activeAt) }}</span>
+            </div>
+          </div>
+        </AccordionTab>
+      </Accordion>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+import Accordion from 'primevue/accordion'
+import AccordionTab from 'primevue/accordiontab'
+
 interface Props {
   alert: {
     id: number
@@ -49,16 +100,39 @@ interface Props {
     instanceName?: string
     isSilenced?: boolean
     totals?: {
-      alerting: number;
-      normal: number;
-    };
+      alerting: number
+      normal: number
+    }
+    alerts?: Array<{
+      labels: Record<string, string>
+      annotations: Record<string, string>
+      state: 'Alerting' | 'Normal'
+      activeAt: string
+      value: string
+    }>
   }
   fontSize?: number
+  showNormalSubalerts?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  fontSize: 2
+  fontSize: 2,
+  showNormalSubalerts: false
 })
+
+const expanded = ref(false)
+
+const filteredSubAlerts = computed(() => {
+  if (!props.alert.alerts) return []
+  if (props.showNormalSubalerts) return props.alert.alerts
+  return props.alert.alerts.filter(subAlert => subAlert.state === 'Alerting')
+})
+
+const toggleAccordion = () => {
+  if (props.alert.alerts && props.alert.alerts.length > 0) {
+    expanded.value = !expanded.value
+  }
+}
 
 const getStateIcon = (state: string): string => {
   const icons: Record<string, string> = {
@@ -69,6 +143,11 @@ const getStateIcon = (state: string): string => {
     no_data: 'pi pi-question-circle',
   }
   return icons[state] || 'pi pi-info-circle'
+}
+
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString)
+  return date.toLocaleString()
 }
 
 const getDuration = (dateString: string): string => {
@@ -102,6 +181,10 @@ const getDuration = (dateString: string): string => {
 .alert-row:hover {
   background: rgba(255, 255, 255, 0.06);
   transform: translateX(2px);
+}
+
+.alert-row.has-subalerts {
+  cursor: pointer;
 }
 
 .alert-alerting {
@@ -257,6 +340,7 @@ const getDuration = (dateString: string): string => {
 .alert-actions {
   display: flex;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .view-link {
@@ -275,6 +359,103 @@ const getDuration = (dateString: string): string => {
 .view-link:hover {
   color: #90caf9;
   background: rgba(100, 181, 246, 0.1);
+}
+
+.sub-alerts-container {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  margin-bottom: 1px;
+}
+
+.sub-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.sub-alert-header i {
+  font-size: 1rem;
+}
+
+.text-alerting {
+  color: #f44336;
+}
+
+.text-ok {
+  color: #4caf50;
+}
+
+.sub-alert-state {
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.sub-alert-value {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+.sub-alert-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-section h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sub-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sub-annotations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.annotation-row {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.annotation-key {
+  color: #aaa;
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.annotation-value {
+  color: #ccc;
+  word-break: break-word;
+}
+
+.detail-label {
+  color: #aaa;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.detail-value {
+  color: #ccc;
+  font-size: 0.85rem;
 }
 
 @media (max-width: 1024px) {

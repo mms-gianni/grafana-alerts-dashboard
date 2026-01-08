@@ -37,8 +37,58 @@
           <span v-if="alert.totals?.normal && alert.totals.normal >= 1" class="total-chip normal-chip">
             {{ alert.totals.normal }}
           </span>
+          <button 
+            v-if="alert.alerts && alert.alerts.length > 0"
+            @click="toggleExpanded"
+            class="expand-btn-card"
+            :title="expanded ? 'Collapse sub-alerts' : 'Expand sub-alerts'"
+          >
+            <i :class="['pi', expanded ? 'pi-chevron-up' : 'pi-chevron-down']"></i>
+          </button>
         </div>
       </div>
+    </div>
+
+    <div v-if="expanded && alert.alerts && alert.alerts.length > 0" class="sub-alerts-section">
+      <h4 class="sub-alerts-title">Sub-Alerts</h4>
+      <Accordion :multiple="true">
+        <AccordionTab 
+          v-for="(subAlert, index) in alert.alerts" 
+          :key="index"
+        >
+          <template #header>
+            <div class="sub-alert-header">
+              <i :class="['pi', subAlert.state === 'Alerting' ? 'pi-exclamation-triangle' : 'pi-check-circle', subAlert.state === 'Alerting' ? 'text-alerting' : 'text-ok']"></i>
+              <span class="sub-alert-state">{{ subAlert.state }}</span>
+              <span class="sub-alert-value">{{ subAlert.value }}</span>
+            </div>
+          </template>
+          <div class="sub-alert-content">
+            <div v-if="Object.keys(subAlert.labels).length > 0" class="sub-section">
+              <strong>Labels:</strong>
+              <div class="sub-labels">
+                <span v-for="(value, key) in subAlert.labels" :key="key" class="label-tag">
+                  {{ key }}: {{ value }}
+                </span>
+              </div>
+            </div>
+            
+            <div v-if="Object.keys(subAlert.annotations).length > 0" class="sub-section">
+              <strong>Annotations:</strong>
+              <div class="sub-annotations">
+                <div v-for="(value, key) in subAlert.annotations" :key="key" class="annotation-item">
+                  <span class="annotation-key">{{ key }}:</span>
+                  <span>{{ value }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="sub-section">
+              <strong>Active since:</strong> {{ formatDate(subAlert.activeAt) }}
+            </div>
+          </div>
+        </AccordionTab>
+      </Accordion>
     </div>
 
     <div class="alert-footer">
@@ -51,6 +101,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+import Accordion from 'primevue/accordion'
+import AccordionTab from 'primevue/accordiontab'
+
 interface Props {
   alert: {
     id: number
@@ -62,16 +116,37 @@ interface Props {
     instanceName?: string
     isSilenced?: boolean
     totals?: {
-      alerting: number;
-      normal: number;
-    };
+      alerting: number
+      normal: number
+    }
+    alerts?: Array<{
+      labels: Record<string, string>
+      annotations: Record<string, string>
+      state: 'Alerting' | 'Normal'
+      activeAt: string
+      value: string
+    }>
   }
   fontSize?: number
+  showNormalSubalerts?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  fontSize: 2
+  fontSize: 2,
+  showNormalSubalerts: false
 })
+
+const expanded = ref(false)
+
+const filteredSubAlerts = computed(() => {
+  if (!props.alert.alerts) return []
+  if (props.showNormalSubalerts) return props.alert.alerts
+  return props.alert.alerts.filter(subAlert => subAlert.state === 'Alerting')
+})
+
+const toggleExpanded = () => {
+  expanded.value = !expanded.value
+}
 
 const getStateIcon = (state: string): string => {
   const icons: Record<string, string> = {
@@ -263,6 +338,26 @@ const getDuration = (dateString: string): string => {
   align-items: center;
 }
 
+.expand-btn-card {
+  background: rgba(100, 181, 246, 0.2);
+  border: none;
+  color: #64b5f6;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+}
+
+.expand-btn-card:hover {
+  background: rgba(100, 181, 246, 0.3);
+  color: #90caf9;
+}
+
 .total-chip {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -302,5 +397,90 @@ const getDuration = (dateString: string): string => {
 
 .view-link:hover {
   color: #90caf9;
+}
+
+.sub-alerts-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sub-alerts-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sub-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  width: 100%;
+}
+
+.sub-alert-header i {
+  font-size: 0.9rem;
+}
+
+.text-alerting {
+  color: #f44336;
+}
+
+.text-ok {
+  color: #4caf50;
+}
+
+.sub-alert-state {
+  font-weight: 600;
+  min-width: 70px;
+}
+
+.sub-alert-value {
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
+.sub-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.sub-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sub-section strong {
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
+.sub-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sub-annotations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.annotation-item {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.annotation-key {
+  font-weight: 600;
+  color: #aaa;
+  min-width: 100px;
 }
 </style>

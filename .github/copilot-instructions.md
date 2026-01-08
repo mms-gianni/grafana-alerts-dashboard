@@ -5,7 +5,7 @@ Alternative dashboard for Grafana alerts optimized for wall screen displays.
 
 ## Tech Stack
 - **Backend**: NestJS with WebSocket Gateway
-- **Frontend**: Vue 3 + Vite + PrimeVue
+- **Frontend**: Vue 3 + Vite + PrimeVue + tailwindcss 4
 - **Real-time Updates**: Socket.io connections
 
 ## Development Guidelines

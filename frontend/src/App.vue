@@ -83,6 +83,7 @@
       v-model:fontSize="fontSize"
       v-model:viewMode="viewMode"
       v-model:theme="theme"
+      v-model:showNormalSubalerts="showNormalSubalerts"
       :availableInstances="availableInstances"
       :availableLabels="availableLabels"
     />
@@ -118,6 +119,7 @@
           :key="`${alert.instanceName || 'default'}-${alert.id}`"
           :alert="alert"
           :fontSize="fontSize"
+          :showNormalSubalerts="showNormalSubalerts"
         />
       </div>
 
@@ -127,6 +129,7 @@
           :key="`${alert.instanceName || 'default'}-${alert.id}`"
           :alert="alert"
           :fontSize="fontSize"
+          :showNormalSubalerts="showNormalSubalerts"
         />
       </div>
     </div>
@@ -151,6 +154,17 @@ interface GrafanaAlert {
   labels?: Record<string, string>
   isSilenced?: boolean
   instanceName?: string
+  totals?: {
+    alerting: number
+    normal: number
+  }
+  alerts?: Array<{
+    labels: Record<string, string>
+    annotations: Record<string, string>
+    state: 'Alerting' | 'Normal'
+    activeAt: string
+    value: string
+  }>
 }
 
 // Cookie utility functions
@@ -191,7 +205,8 @@ const saveSettings = () => {
     selectedInstances: selectedInstances.value,
     selectedLabels: selectedLabels.value,
     fontSize: fontSize.value,
-    theme: theme.value
+    theme: theme.value,
+    showNormalSubalerts: showNormalSubalerts.value
   }
   setCookie('alertsSettings', encodeURIComponent(JSON.stringify(settings)))
 }
@@ -212,6 +227,7 @@ const fontSize = ref(savedSettings?.fontSize || 2)
 const showSidebar = ref(false)
 const refreshing = ref(false)
 const theme = ref<'light' | 'system' | 'dark'>(savedSettings?.theme || 'dark')
+const showNormalSubalerts = ref(savedSettings?.showNormalSubalerts ?? false)
 
 const systemPrefersDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 
