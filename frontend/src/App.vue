@@ -3,46 +3,46 @@
     <header class="dashboard-header">
       <div class="stats-section">
         <div class="stat">
-          <span class="stat-label">Showing:</span>
+          <span class="stat-label">Showing</span>
           <span class="stat-value">{{ sortedAlerts.length }} / {{ alerts.length }}</span>
         </div>
         <div class="stat alerting">
-          <span class="stat-label">Alerting:</span>
+          <span class="stat-label">Alerting</span>
           <div class="stat-value">
             <i class="pi pi-exclamation-triangle"></i>
             <span>{{ alertingCount }}</span>
           </div>
         </div>
         <div class="stat pending">
-          <span class="stat-label">Pending:</span>
+          <span class="stat-label">Pending</span>
           <div class="stat-value">
             <i class="pi pi-clock"></i>
             <span>{{ pendingCount }}</span>
           </div>
         </div>
         <div class="stat no-data">
-          <span class="stat-label">No Data:</span>
+          <span class="stat-label">No Data</span>
           <div class="stat-value">
             <i class="pi pi-question-circle"></i>
             <span>{{ noDataCount }}</span>
           </div>
         </div>
         <div class="stat paused">
-          <span class="stat-label">Paused:</span>
+          <span class="stat-label">Paused</span>
           <div class="stat-value">
             <i class="pi pi-times-circle"></i>
             <span>{{ pausedCount }}</span>
           </div>
         </div>
         <div class="stat silenced">
-          <span class="stat-label">Silenced:</span>
+          <span class="stat-label">Silenced</span>
           <div class="stat-value">
             <i class="pi pi-volume-off"></i>
             <span>{{ silencedCount }}</span>
           </div>
         </div>
         <div class="stat ok">
-          <span class="stat-label">OK:</span>
+          <span class="stat-label">OK</span>
           <div class="stat-value">
             <i class="pi pi-check-circle"></i>
             <span>{{ okCount }}</span>
