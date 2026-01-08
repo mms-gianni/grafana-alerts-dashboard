@@ -1,5 +1,7 @@
 <template>
-  <div :class="['alert-card', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced, 'new-alert': isNew }]">
+  <div 
+    :class="['alert-card', `alert-${alert.state}`, { 'alert-silenced': alert.isSilenced, 'new-alert': isNew }]"
+  >
     <div class="alert-header">
       <div class="alert-icon" :style="{ fontSize: `${fontSize}rem`, width: `${fontSize * 24}px`, height: `${fontSize * 24}px` }">
         <i :class="getStateIcon(alert.state)"></i>
@@ -145,18 +147,21 @@ const toggleExpanded = () => {
 }
 
 .new-alert {
-  animation: flashAlert 2s ease-in-out 3;
   position: relative;
+  animation: flashAlert 0.5s ease-in-out infinite;
+  border-left-color: #ffc107 !important;
 }
 
 @keyframes flashAlert {
   0%, 100% {
     box-shadow: 0 0 0 rgba(255, 193, 7, 0);
     transform: scale(1);
+    background: rgba(255, 193, 7, 0);
   }
   50% {
     box-shadow: 0 0 30px rgba(255, 193, 7, 0.8), inset 0 0 30px rgba(255, 193, 7, 0.3);
     transform: scale(1.02);
+    background: rgba(255, 193, 7, 0.15);
   }
 }
 

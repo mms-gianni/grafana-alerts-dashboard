@@ -84,6 +84,7 @@
       v-model:viewMode="viewMode"
       v-model:theme="theme"
       v-model:showNormalSubalerts="showNormalSubalerts"
+      v-model:highlightDuration="highlightDuration"
       :availableInstances="availableInstances"
       :availableLabels="availableLabels"
     />
@@ -120,7 +121,7 @@
           :alert="alert"
           :fontSize="fontSize"
           :showNormalSubalerts="showNormalSubalerts"
-          :isNew="newAlertIds.has(alert.id)"
+          :isNew="highlightDuration > 0 && newAlertIds.has(alert.id)"
         />
       </div>
 
@@ -131,7 +132,7 @@
           :alert="alert"
           :fontSize="fontSize"
           :showNormalSubalerts="showNormalSubalerts"
-          :isNew="newAlertIds.has(alert.id)"
+          :isNew="highlightDuration > 0 && newAlertIds.has(alert.id)"
         />
       </div>
     </div>
@@ -185,7 +186,8 @@ const saveSettings = () => {
     selectedLabels: selectedLabels.value,
     fontSize: fontSize.value,
     theme: theme.value,
-    showNormalSubalerts: showNormalSubalerts.value
+    showNormalSubalerts: showNormalSubalerts.value,
+    highlightDuration: highlightDuration.value
   }
   setCookie('alertsSettings', encodeURIComponent(JSON.stringify(settings)))
 }
@@ -209,6 +211,7 @@ const showSidebar = ref(false)
 const refreshing = ref(false)
 const theme = ref<'light' | 'system' | 'dark'>(savedSettings?.theme || 'dark')
 const showNormalSubalerts = ref(savedSettings?.showNormalSubalerts ?? false)
+const highlightDuration = ref(savedSettings?.highlightDuration ?? 10)
 
 const systemPrefersDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 
@@ -331,26 +334,31 @@ onMounted(() => {
   })
 
   socket.on('alerts', (data: GrafanaAlert[]) => {
-    const newIds = new Set<number>()
+    console.log('Received alerts:', data.length, 'highlightDuration:', highlightDuration.value)
     
     data.forEach(alert => {
       const previousState = previousAlertStates.value.get(alert.id)
       
-      // Mark as new if it's a new alert or state changed to alerting/pending
-      if (!previousState || 
-          (previousState !== alert.state && 
-           (alert.state === 'alerting' || alert.state === 'pending'))) {
-        newIds.add(alert.id)
-        // Remove from new alerts after 10 seconds
-        setTimeout(() => {
-          newAlertIds.value.delete(alert.id)
-        }, 10000)
+      // Mark as new if state changed to alerting/pending (not on first load)
+      if (previousState && 
+          previousState !== alert.state && 
+          (alert.state === 'alerting' || alert.state === 'pending')) {
+        console.log('New alert detected:', alert.name, 'old state:', previousState, 'new state:', alert.state)
+        newAlertIds.value.add(alert.id)
+        // Remove from new alerts after configured duration (in milliseconds)
+        if (highlightDuration.value > 0) {
+          setTimeout(() => {
+            console.log('Removing alert from new:', alert.id)
+            newAlertIds.value.delete(alert.id)
+          }, highlightDuration.value * 1000)
+        }
       }
       
       previousAlertStates.value.set(alert.id, alert.state)
     })
     
-    newAlertIds.value = newIds
+    console.log('New alert IDs:', Array.from(newAlertIds.value))
+    
     alerts.value = data
     loading.value = false
     error.value = null

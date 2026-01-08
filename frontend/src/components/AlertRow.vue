@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, toRef } from 'vue'
+import { ref, computed, toRef, watch } from 'vue'
 import SubAlertAccordion from './SubAlertAccordion.vue'
 import { useAlert, type GrafanaAlert } from '../composables/useAlert'
 
@@ -70,6 +70,12 @@ const props = withDefaults(defineProps<Props>(), {
   fontSize: 2,
   showNormalSubalerts: false,
   isNew: false
+})
+
+watch(() => props.isNew, (newVal) => {
+  if (newVal) {
+    console.log('Alert is NEW:', props.alert.name, props.alert.id)
+  }
 })
 
 const expanded = ref(false)
@@ -135,16 +141,19 @@ const toggleAccordion = () => {
 }
 
 .new-alert {
-  animation: flashAlert 2s ease-in-out 3;
   position: relative;
+  animation: flashAlert 0.5s ease-in-out infinite;
+  border-left: 4px solid #ffc107 !important;
 }
 
 @keyframes flashAlert {
   0%, 100% {
     box-shadow: 0 0 0 rgba(255, 193, 7, 0);
+    background: rgba(255, 193, 7, 0);
   }
   50% {
     box-shadow: 0 0 20px rgba(255, 193, 7, 0.8), inset 0 0 20px rgba(255, 193, 7, 0.3);
+    background: rgba(255, 193, 7, 0.15);
   }
 }
 

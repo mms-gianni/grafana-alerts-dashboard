@@ -81,7 +81,7 @@
           <i class="pi pi-search-plus"></i>
         </div>
       </div>
-      
+
       <div class="drawer-section">
         <h3 class="drawer-section-title">Sub-Alerts</h3>
         <div class="switch-control">
@@ -93,6 +93,26 @@
               @update:modelValue="$emit('update:showNormalSubalerts', $event)"
             />
           </label>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <h3 class="drawer-section-title">Notifications</h3>
+        <div class="duration-control">
+          <div class="duration-label">
+            <span>Highlight Duration</span>
+            <span class="duration-value">{{ highlightDuration === 0 ? 'Off' : `${highlightDuration}s` }}</span>
+          </div>
+          <input 
+            type="range" 
+            :value="highlightDuration"
+            @input="$emit('update:highlightDuration', parseInt(($event.target as HTMLInputElement).value))"
+            min="0" 
+            max="300" 
+            step="5" 
+            class="duration-slider"
+            title="Highlight duration in seconds (0 = off)"
+          />
         </div>
       </div>
 
@@ -169,6 +189,7 @@ interface Props {
   availableInstances: string[]
   availableLabels: string[]
   showNormalSubalerts: boolean
+  highlightDuration: number
 }
 
 const props = defineProps<Props>()
@@ -182,6 +203,7 @@ const emit = defineEmits<{
   'update:viewMode': [value: 'compact' | 'grid']
   'update:theme': [value: 'light' | 'system' | 'dark']
   'update:showNormalSubalerts': [value: boolean]
+  'update:highlightDuration': [value: number]
 }>()
 
 const isVisible = computed({
@@ -355,5 +377,53 @@ const stateOptions = [
 
 .switch-label span {
   color: #ccc;
+}
+
+.duration-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.duration-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.duration-value {
+  font-weight: 600;
+  color: #64b5f6;
+  font-size: 0.85rem;
+}
+
+.duration-slider {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+
+.duration-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #64b5f6;
+  cursor: pointer;
+}
+
+.duration-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #64b5f6;
+  cursor: pointer;
+  border: none;
 }
 </style>
