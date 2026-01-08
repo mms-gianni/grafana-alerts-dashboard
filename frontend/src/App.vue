@@ -323,28 +323,28 @@ watch(showSidebar, (newValue, oldValue) => {
   }
 })
 
+// Watch for notification settings changes
+watch(notificationSound, (newSound) => {
+  if (newSound) {
+    notificationAudio.value = new Audio(`/${newSound}`)
+    notificationAudio.value.volume = notificationVolume.value
+  } else {
+    notificationAudio.value = null
+  }
+})
+
+watch(notificationVolume, (newVolume) => {
+  if (notificationAudio.value) {
+    notificationAudio.value.volume = newVolume
+  }
+})
+
 onMounted(() => {
   // Create audio element for notifications
   if (notificationSound.value) {
     notificationAudio.value = new Audio(`/${notificationSound.value}`)
     notificationAudio.value.volume = notificationVolume.value
   }
-  
-  // Watch for notification settings changes
-  watch(notificationSound, (newSound) => {
-    if (newSound) {
-      notificationAudio.value = new Audio(`/${newSound}`)
-      notificationAudio.value.volume = notificationVolume.value
-    } else {
-      notificationAudio.value = null
-    }
-  })
-  
-  watch(notificationVolume, (newVolume) => {
-    if (notificationAudio.value) {
-      notificationAudio.value.volume = newVolume
-    }
-  })
   
   // In production (Docker), backend is on same host via nginx proxy
   // In development, use VITE_BACKEND_URL or localhost:3001
