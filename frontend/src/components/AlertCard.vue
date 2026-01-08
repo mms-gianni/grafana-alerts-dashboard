@@ -49,46 +49,14 @@
       </div>
     </div>
 
-    <div v-if="expanded && alert.alerts && alert.alerts.length > 0" class="sub-alerts-section">
+    <div v-if="expanded && filteredSubAlerts.length > 0" class="sub-alerts-section">
       <h4 class="sub-alerts-title">Sub-Alerts</h4>
-      <Accordion :multiple="true">
-        <AccordionTab 
-          v-for="(subAlert, index) in alert.alerts" 
-          :key="index"
-        >
-          <template #header>
-            <div class="sub-alert-header">
-              <i :class="['pi', subAlert.state === 'Alerting' ? 'pi-exclamation-triangle' : 'pi-check-circle', subAlert.state === 'Alerting' ? 'text-alerting' : 'text-ok']"></i>
-              <span class="sub-alert-state">{{ subAlert.state }}</span>
-              <span class="sub-alert-value">{{ subAlert.value }}</span>
-            </div>
-          </template>
-          <div class="sub-alert-content">
-            <div v-if="Object.keys(subAlert.labels).length > 0" class="sub-section">
-              <strong>Labels:</strong>
-              <div class="sub-labels">
-                <span v-for="(value, key) in subAlert.labels" :key="key" class="label-tag">
-                  {{ key }}: {{ value }}
-                </span>
-              </div>
-            </div>
-            
-            <div v-if="Object.keys(subAlert.annotations).length > 0" class="sub-section">
-              <strong>Annotations:</strong>
-              <div class="sub-annotations">
-                <div v-for="(value, key) in subAlert.annotations" :key="key" class="annotation-item">
-                  <span class="annotation-key">{{ key }}:</span>
-                  <span>{{ value }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="sub-section">
-              <strong>Active since:</strong> {{ formatDate(subAlert.activeAt) }}
-            </div>
-          </div>
-        </AccordionTab>
-      </Accordion>
+      <SubAlertAccordion 
+        :sub-alerts="filteredSubAlerts"
+        content-class="sub-alert-content"
+        section-class="sub-section"
+        annotation-class="annotation-item"
+      />
     </div>
 
     <div class="alert-footer">
@@ -101,32 +69,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import Accordion from 'primevue/accordion'
-import AccordionTab from 'primevue/accordiontab'
+import { ref, computed, toRef } from 'vue'
+import SubAlertAccordion from './SubAlertAccordion.vue'
+import { useAlert, type GrafanaAlert } from '../composables/useAlert'
 
 interface Props {
-  alert: {
-    id: number
-    name: string
-    state: 'ok' | 'paused' | 'alerting' | 'pending' | 'no_data'
-    newStateDate: string
-    url: string
-    labels?: Record<string, string>
-    instanceName?: string
-    isSilenced?: boolean
-    totals?: {
-      alerting: number
-      normal: number
-    }
-    alerts?: Array<{
-      labels: Record<string, string>
-      annotations: Record<string, string>
-      state: 'Alerting' | 'Normal'
-      activeAt: string
-      value: string
-    }>
-  }
+  alert: GrafanaAlert
   fontSize?: number
   showNormalSubalerts?: boolean
 }
@@ -138,38 +86,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 const expanded = ref(false)
 
+const { getStateIcon, formatDate, getDuration, useFilteredSubAlerts } = useAlert()
+
+const filteredSubAlerts = useFilteredSubAlerts(
+  computed(() => props.alert),
+  toRef(props, 'showNormalSubalerts')
+)
+
 const toggleExpanded = () => {
   expanded.value = !expanded.value
-}
-
-const getStateIcon = (state: string): string => {
-  const icons: Record<string, string> = {
-    alerting: 'pi pi-exclamation-triangle',
-    pending: 'pi pi-clock',
-    ok: 'pi pi-check-circle',
-    paused: 'pi pi-times-circle',
-    no_data: 'pi pi-question-circle',
-  }
-  return icons[state] || 'pi pi-info-circle'
-}
-
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleString()
-}
-
-const getDuration = (dateString: string): string => {
-  const start = new Date(dateString)
-  const now = new Date()
-  const diff = now.getTime() - start.getTime()
-
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-
-  if (days > 0) return `${days}d ${hours % 24}h`
-  if (hours > 0) return `${hours}h ${minutes % 60}m`
-  return `${minutes}m`
 }
 </script>
 
@@ -405,76 +330,5 @@ const getDuration = (dateString: string): string => {
   color: #aaa;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.sub-alert-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.85rem;
-  width: 100%;
-}
-
-.sub-alert-header i {
-  font-size: 0.9rem;
-}
-
-.text-alerting {
-  color: #f44336;
-}
-
-.text-ok {
-  color: #4caf50;
-}
-
-.sub-alert-state {
-  font-weight: 600;
-  min-width: 70px;
-}
-
-.sub-alert-value {
-  color: #aaa;
-  font-size: 0.8rem;
-}
-
-.sub-alert-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  font-size: 0.85rem;
-}
-
-.sub-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.sub-section strong {
-  color: #aaa;
-  font-size: 0.8rem;
-}
-
-.sub-labels {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.sub-annotations {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.annotation-item {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.annotation-key {
-  font-weight: 600;
-  color: #aaa;
-  min-width: 100px;
 }
 </style>

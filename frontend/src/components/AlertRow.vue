@@ -40,77 +40,27 @@
     </div>
     
     <div v-if="expanded && filteredSubAlerts.length > 0" class="sub-alerts-container">
-      <Accordion :multiple="true">
-        <AccordionTab 
-          v-for="(subAlert, index) in filteredSubAlerts" 
-          :key="index"
-        >
-          <template #header>
-            <div class="sub-alert-header">
-              <i :class="['pi', subAlert.state === 'Alerting' ? 'pi-exclamation-triangle' : 'pi-check-circle', subAlert.state === 'Alerting' ? 'text-alerting' : 'text-ok']"></i>
-              <span class="sub-alert-state">{{ subAlert.state }}</span>
-              <span class="sub-alert-value">Value: {{ subAlert.value }}</span>
-            </div>
-          </template>
-          <div class="sub-alert-details">
-            <div v-if="Object.keys(subAlert.labels).length > 0" class="detail-section">
-              <h4>Labels:</h4>
-              <div class="sub-labels">
-                <span v-for="(value, key) in subAlert.labels" :key="key" class="label-tag">
-                  {{ key }}: {{ value }}
-                </span>
-              </div>
-            </div>
-            
-            <div v-if="Object.keys(subAlert.annotations).length > 0" class="detail-section">
-              <h4>Annotations:</h4>
-              <div class="sub-annotations">
-                <div v-for="(value, key) in subAlert.annotations" :key="key" class="annotation-row">
-                  <span class="annotation-key">{{ key }}:</span>
-                  <span class="annotation-value">{{ value }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="detail-section">
-              <span class="detail-label">Active since:</span>
-              <span class="detail-value">{{ formatDate(subAlert.activeAt) }}</span>
-            </div>
-          </div>
-        </AccordionTab>
-      </Accordion>
+      <SubAlertAccordion 
+        :sub-alerts="filteredSubAlerts"
+        value-prefix="Value: "
+        content-class="sub-alert-details"
+        section-class="detail-section"
+        annotation-class="annotation-row"
+        annotation-value-class="annotation-value"
+        detail-label-class="detail-label"
+        detail-value-class="detail-value"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import Accordion from 'primevue/accordion'
-import AccordionTab from 'primevue/accordiontab'
+import { ref, computed, toRef } from 'vue'
+import SubAlertAccordion from './SubAlertAccordion.vue'
+import { useAlert, type GrafanaAlert } from '../composables/useAlert'
 
 interface Props {
-  alert: {
-    id: number
-    name: string
-    state: 'ok' | 'paused' | 'alerting' | 'pending' | 'no_data'
-    newStateDate: string
-    url: string
-    ruleGroup: string
-    labels?: Record<string, string>
-    instanceName?: string
-    isSilenced?: boolean
-    totals?: {
-      alerting: number
-      normal: number
-    }
-    alerts?: Array<{
-      labels: Record<string, string>
-      annotations: Record<string, string>
-      state: 'Alerting' | 'Normal'
-      activeAt: string
-      value: string
-    }>
-  }
+  alert: GrafanaAlert
   fontSize?: number
   showNormalSubalerts?: boolean
 }
@@ -122,46 +72,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 const expanded = ref(false)
 
-const filteredSubAlerts = computed(() => {
-  if (!props.alert.alerts) return []
-  if (props.showNormalSubalerts) return props.alert.alerts
-  return props.alert.alerts.filter(subAlert => subAlert.state === 'Alerting')
-})
+const { getStateIcon, getDuration, useFilteredSubAlerts } = useAlert()
+
+const filteredSubAlerts = useFilteredSubAlerts(
+  computed(() => props.alert),
+  toRef(props, 'showNormalSubalerts')
+)
 
 const toggleAccordion = () => {
   if (props.alert.alerts && props.alert.alerts.length > 0) {
     expanded.value = !expanded.value
   }
-}
-
-const getStateIcon = (state: string): string => {
-  const icons: Record<string, string> = {
-    alerting: 'pi pi-exclamation-triangle',
-    pending: 'pi pi-clock',
-    ok: 'pi pi-check-circle',
-    paused: 'pi pi-times-circle',
-    no_data: 'pi pi-question-circle',
-  }
-  return icons[state] || 'pi pi-info-circle'
-}
-
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleString()
-}
-
-const getDuration = (dateString: string): string => {
-  const start = new Date(dateString)
-  const now = new Date()
-  const diff = now.getTime() - start.getTime()
-
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-
-  if (days > 0) return `${days}d ${hours % 24}h`
-  if (hours > 0) return `${hours}h ${minutes % 60}m`
-  return `${minutes}m`
 }
 </script>
 
@@ -367,36 +288,6 @@ const getDuration = (dateString: string): string => {
   margin-bottom: 1px;
 }
 
-.sub-alert-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-  width: 100%;
-}
-
-.sub-alert-header i {
-  font-size: 1rem;
-}
-
-.text-alerting {
-  color: #f44336;
-}
-
-.text-ok {
-  color: #4caf50;
-}
-
-.sub-alert-state {
-  font-weight: 600;
-  min-width: 80px;
-}
-
-.sub-alert-value {
-  color: #aaa;
-  font-size: 0.85rem;
-}
-
 .sub-alert-details {
   display: flex;
   flex-direction: column;
@@ -416,46 +307,6 @@ const getDuration = (dateString: string): string => {
   color: #aaa;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.sub-labels {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.sub-annotations {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.annotation-row {
-  display: flex;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-}
-
-.annotation-key {
-  color: #aaa;
-  font-weight: 600;
-  min-width: 120px;
-}
-
-.annotation-value {
-  color: #ccc;
-  word-break: break-word;
-}
-
-.detail-label {
-  color: #aaa;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.detail-value {
-  color: #ccc;
-  font-size: 0.85rem;
 }
 
 @media (max-width: 1024px) {

@@ -142,30 +142,7 @@ import AlertCard from './components/AlertCard.vue'
 import AlertRow from './components/AlertRow.vue'
 import SettingsSidebar from './components/SettingsSidebar.vue'
 import { io, Socket } from 'socket.io-client'
-
-interface GrafanaAlert {
-  id: number
-  name: string
-  state: 'ok' | 'paused' | 'alerting' | 'pending' | 'no_data'
-  newStateDate: string
-  evalDate: string
-  url: string
-  ruleGroup: string
-  labels?: Record<string, string>
-  isSilenced?: boolean
-  instanceName?: string
-  totals?: {
-    alerting: number
-    normal: number
-  }
-  alerts?: Array<{
-    labels: Record<string, string>
-    annotations: Record<string, string>
-    state: 'Alerting' | 'Normal'
-    activeAt: string
-    value: string
-  }>
-}
+import type { GrafanaAlert } from './composables/useAlert'
 
 // Cookie utility functions
 const setCookie = (name: string, value: string, days: number = 365) => {
