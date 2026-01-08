@@ -85,6 +85,8 @@
       v-model:theme="theme"
       v-model:showNormalSubalerts="showNormalSubalerts"
       v-model:highlightDuration="highlightDuration"
+      v-model:notificationSound="notificationSound"
+      v-model:notificationVolume="notificationVolume"
       :availableInstances="availableInstances"
       :availableLabels="availableLabels"
     />
@@ -187,7 +189,9 @@ const saveSettings = () => {
     fontSize: fontSize.value,
     theme: theme.value,
     showNormalSubalerts: showNormalSubalerts.value,
-    highlightDuration: highlightDuration.value
+    highlightDuration: highlightDuration.value,
+    notificationSound: notificationSound.value,
+    notificationVolume: notificationVolume.value
   }
   setCookie('alertsSettings', encodeURIComponent(JSON.stringify(settings)))
 }
@@ -212,6 +216,9 @@ const refreshing = ref(false)
 const theme = ref<'light' | 'system' | 'dark'>(savedSettings?.theme || 'dark')
 const showNormalSubalerts = ref(savedSettings?.showNormalSubalerts ?? false)
 const highlightDuration = ref(savedSettings?.highlightDuration ?? 10)
+const notificationSound = ref(savedSettings?.notificationSound ?? 'notification-1.mp3')
+const notificationVolume = ref(savedSettings?.notificationVolume ?? 0.5)
+const notificationAudio = ref<HTMLAudioElement | null>(null)
 
 const systemPrefersDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 
@@ -317,6 +324,28 @@ watch(showSidebar, (newValue, oldValue) => {
 })
 
 onMounted(() => {
+  // Create audio element for notifications
+  if (notificationSound.value) {
+    notificationAudio.value = new Audio(`/${notificationSound.value}`)
+    notificationAudio.value.volume = notificationVolume.value
+  }
+  
+  // Watch for notification settings changes
+  watch(notificationSound, (newSound) => {
+    if (newSound) {
+      notificationAudio.value = new Audio(`/${newSound}`)
+      notificationAudio.value.volume = notificationVolume.value
+    } else {
+      notificationAudio.value = null
+    }
+  })
+  
+  watch(notificationVolume, (newVolume) => {
+    if (notificationAudio.value) {
+      notificationAudio.value.volume = newVolume
+    }
+  })
+  
   // In production (Docker), backend is on same host via nginx proxy
   // In development, use VITE_BACKEND_URL or localhost:3001
   const backendUrl = import.meta.env.PROD ? '' : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001')
@@ -345,6 +374,15 @@ onMounted(() => {
           (alert.state === 'alerting' || alert.state === 'pending')) {
         console.log('New alert detected:', alert.name, 'old state:', previousState, 'new state:', alert.state)
         newAlertIds.value.add(alert.id)
+        
+        // Play notification sound
+        if (notificationAudio.value && notificationSound.value && highlightDuration.value > 0) {
+          notificationAudio.value.currentTime = 0
+          notificationAudio.value.play().catch(err => {
+            console.log('Could not play notification sound:', err)
+          })
+        }
+        
         // Remove from new alerts after configured duration (in milliseconds)
         if (highlightDuration.value > 0) {
           setTimeout(() => {

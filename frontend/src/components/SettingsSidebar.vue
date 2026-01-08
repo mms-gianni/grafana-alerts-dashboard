@@ -113,8 +113,38 @@
             class="duration-slider"
             title="Highlight duration in seconds (0 = off)"
           />
+        </div>        <div class="sound-control">
+          <label for="notification-sound" class="control-label">Notification Sound</label>
+          <select 
+            id="notification-sound"
+            :value="notificationSound"
+            @change="handleSoundChange"
+            class="sound-select"
+          >
+            <option value="">None</option>
+            <option value="notification-1.mp3">Sound 1</option>
+            <option value="notification-2.mp3">Sound 2</option>
+            <option value="notification-3.mp3">Sound 3</option>
+            <option value="notification-4.mp3">Sound 4</option>
+            <option value="notification-5.mp3">Sound 5</option>
+          </select>
         </div>
-      </div>
+        <div class="volume-control">
+          <div class="duration-label">
+            <span>Volume</span>
+            <span class="duration-value">{{ Math.round(notificationVolume * 100) }}%</span>
+          </div>
+          <input 
+            type="range" 
+            :value="notificationVolume"
+            @input="$emit('update:notificationVolume', parseFloat(($event.target as HTMLInputElement).value))"
+            min="0" 
+            max="1" 
+            step="0.1" 
+            class="volume-slider"
+            title="Notification volume"
+          />
+        </div>      </div>
 
       <div class="drawer-section">
         <h3 class="drawer-section-title">Theme</h3>
@@ -190,6 +220,8 @@ interface Props {
   availableLabels: string[]
   showNormalSubalerts: boolean
   highlightDuration: number
+  notificationSound: string
+  notificationVolume: number
 }
 
 const props = defineProps<Props>()
@@ -204,6 +236,8 @@ const emit = defineEmits<{
   'update:theme': [value: 'light' | 'system' | 'dark']
   'update:showNormalSubalerts': [value: boolean]
   'update:highlightDuration': [value: number]
+  'update:notificationSound': [value: string]
+  'update:notificationVolume': [value: number]
 }>()
 
 const isVisible = computed({
@@ -219,6 +253,20 @@ const stateOptions = [
   { label: 'Silenced', value: 'silenced', icon: 'pi pi-volume-off', color: '#757575' },
   { label: 'OK', value: 'ok', icon: 'pi pi-check-circle', color: '#4caf50' },
 ]
+
+const handleSoundChange = (event: Event) => {
+  const newSound = (event.target as HTMLSelectElement).value
+  emit('update:notificationSound', newSound)
+  
+  // Play preview of selected sound
+  if (newSound) {
+    const previewAudio = new Audio(`/${newSound}`)
+    previewAudio.volume = props.notificationVolume
+    previewAudio.play().catch(err => {
+      console.log('Could not play preview sound:', err)
+    })
+  }
+}
 </script>
 
 <style>
@@ -419,6 +467,72 @@ const stateOptions = [
 }
 
 .duration-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #64b5f6;
+  cursor: pointer;
+  border: none;
+}
+
+.sound-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control-label {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.sound-select {
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.sound-select:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.sound-select option {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+.volume-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.volume-slider {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #64b5f6;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
