@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
 
@@ -137,12 +137,6 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const expanded = ref(false)
-
-const filteredSubAlerts = computed(() => {
-  if (!props.alert.alerts) return []
-  if (props.showNormalSubalerts) return props.alert.alerts
-  return props.alert.alerts.filter(subAlert => subAlert.state === 'Alerting')
-})
 
 const toggleExpanded = () => {
   expanded.value = !expanded.value
