@@ -4,14 +4,56 @@ Alternative dashboard for Grafana alerts optimized for wall screen displays. Bui
 
 ## Features
 
+- **Wall Screen Optimized**: Large, clear display designed for monitoring walls
+- **Alert Status Visualization**: Color-coded alerts by state (alerting, pending, ok, paused, silenced, no_data)
+- **Instance Identification**: Visual and auditory notification of which Grafana instance each alert belongs to
 - **Real-time Updates**: WebSocket-based live alert updates from Grafana
 - **Multiple Grafana Instances**: Monitor alerts from multiple Grafana instances simultaneously
-- **Wall Screen Optimized**: Large, clear display designed for monitoring walls
-- **Alert Status Visualization**: Color-coded alerts by state (alerting, pending, ok, paused, no_data)
-- **Instance Identification**: Visual badges showing which Grafana instance each alert belongs to
 - **Auto-refresh**: Automatic polling of Grafana API every 30 seconds
-- **Statistics Dashboard**: Real-time stats showing alert counts by state
 - **Responsive Design**: Works on both large displays and regular screens
+
+## Docker Deployment
+
+The application uses **distroless images** for minimal attack surface and smaller image sizes.
+
+### Quick Start with Docker Compose
+
+1. Getting a Grafana API Key
+
+   1. Log in to your Grafana instance
+   2. Go to **Configuration** → **API Keys**
+   3. Click **Add API key**
+   4. Set a name (e.g., "Alerts Dashboard")
+   5. Set role to **Viewer**
+   6. Set expiration as needed
+   7. Click **Add** and copy the generated key
+
+2. **Copy environment file**:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Configure Grafana connection** in `.env`:
+   
+   Single instance:
+   ```bash
+   GRAFANA_INSTANCES='[{"name":"default","url":"https://grafana.example.com","apiKey":"glsa_xxx"}]'
+   ```
+   
+   Multiple instances:
+   ```bash
+   GRAFANA_INSTANCES='[{"name":"prod","url":"https://grafana-prod.example.com","apiKey":"glsa_xxx"},{"name":"staging","url":"https://grafana-staging.example.com","apiKey":"glsa_yyy"}]'
+   ```
+   
+   > **Note**: Each alert will display a badge indicating which instance it belongs to (except for instances named "default").
+
+4. **Build and run**:
+   ```bash
+   docker compose up -d
+   ```
+
+5. **Access the dashboard**:
+   - Frontend: http://localhost:9999
 
 ## Tech Stack
 
@@ -28,314 +70,6 @@ Alternative dashboard for Grafana alerts optimized for wall screen displays. Bui
 - **Socket.io Client** - WebSocket client for real-time updates
 - **TypeScript** - Type-safe development
 
-## Project Structure
-
-```
-monitoring/
-├── backend/              # NestJS backend application
-│   ├── src/
-│   │   ├── alerts/      # Alerts module (Gateway, Service, Grafana integration)
-│   │   ├── app.module.ts
-│   │   └── main.ts
-│   ├── .env.example     # Backend environment variables template
-│   └── package.json
-├── frontend/            # Vue 3 + Vite frontend application
-│   ├── src/
-│   │   ├── components/  # Vue components
-│   │   ├── assets/      # CSS and static assets
-│   │   ├── App.vue      # Main dashboard component
-│   │   └── main.ts
-│   ├── .env.example     # Frontend environment variables template
-│   ├── Dockerfile       # Frontend Docker image
-│   ├── nginx.conf       # Nginx configuration
-│   └── package.json
-├── .github/
-│   └── copilot-instructions.md
-├── docker-compose.yml   # Docker Compose orchestration
-├── .env.docker          # Docker environment template
-└── package.json         # Root workspace configuration
-```
-
-## Docker Deployment
-
-The application uses **distroless images** for minimal attack surface and smaller image sizes.
-
-### Quick Start with Docker Compose
-
-1. **Copy environment file**:
-   ```bash
-   cp .env.docker .env
-   ```
-
-2. **Configure Grafana connection** in `.env`:
-   
-   Single instance:
-   ```bash
-   GRAFANA_INSTANCES='[{"name":"default","url":"https://grafana.example.com","apiKey":"glsa_xxx"}]'
-   ```
-   
-   Multiple instances:
-   ```bash
-   GRAFANA_INSTANCES='[{"name":"prod","url":"https://grafana-prod.example.com","apiKey":"glsa_xxx"},{"name":"staging","url":"https://grafana-staging.example.com","apiKey":"glsa_yyy"}]'
-   ```
-   
-   > **Note**: Each alert will display a badge indicating which instance it belongs to (except for instances named "default").
-
-3. **Build and run**:
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Access the dashboard**:
-   - Frontend: http://localhost
-   - Backend API: http://localhost:3001
-
-### Individual Container Builds
-
-**Backend**:
-```bash
-cd backend
-docker build -t grafana-alerts-backend .
-docker run -p 3001:3001 \
-  -e GRAFANA_URL=http://grafana:3000 \
-  -e GRAFANA_API_KEY=your-key \
-  grafana-alerts-backend
-```
-
-**Frontend**:
-```bash
-cd frontend
-docker build -t grafana-alerts-frontend .
-docker run -p 80:80 grafana-alerts-frontend
-```
-
-### Image Details
-
-- **Backend**: Multi-stage build using `gcr.io/distroless/nodejs20-debian12`
-  - Build stage: `node:20-alpine`
-  - Runtime: Distroless Node.js 20 (no shell, minimal dependencies)
-  
-- **Frontend**: Multi-stage build using `nginx:alpine`
-  - Build stage: `node:20-alpine` 
-  - Runtime: Nginx Alpine (static file serving)
-
-### Health Checks
-
-Both containers include health check endpoints:
-- **Backend**: `http://localhost:3001/health`
-- **Frontend**: `http://localhost/health`
-
-## Development Setup
-
-## Prerequisites
-
-- Node.js (v18 or higher)
-- npm (v9 or higher)
-- Grafana instance with API access
-- Grafana API key with viewer permissions
-
-## Installation
-
-1. **Clone or navigate to the project directory**
-
-2. **Install all dependencies**
-   ```bash
-   npm run install:all
-   ```
-
-   Or install separately:
-   ```bash
-   # Install root dependencies
-   npm install
-   
-   # Install backend dependencies
-   cd backend && npm install
-   
-   # Install frontend dependencies
-   cd ../frontend && npm install
-   ```
-
-3. **Configure Backend Environment**
-   
-   Create `backend/.env` from the example:
-   ```bash
-   cd backend
-   cp .env.example .env
-   ```
-   
-   Edit `backend/.env`:
-   ```env
-   # JSON array format
-   GRAFANA_INSTANCES='[{"name":"prod","url":"https://grafana-prod:3000","apiKey":"glsa_xxx"},{"name":"staging","url":"https://grafana-staging:3000","apiKey":"glsa_yyy"}]'
-   PORT=3001
-   CORS_ORIGIN=http://localhost:5173
-   POLL_INTERVAL=30000
-   ```
-
-4. **Configure Frontend Environment (Optional)**
-   
-   Create `frontend/.env` if you need to customize the backend URL:
-   ```bash
-   cd frontend
-   cp .env.example .env
-   ```
-   
-   Edit `frontend/.env`:
-   ```env
-   VITE_BACKEND_URL=http://localhost:3001
-   ```
-
-## Getting a Grafana API Key
-
-1. Log in to your Grafana instance
-2. Go to **Configuration** → **API Keys**
-3. Click **Add API key**
-4. Set a name (e.g., "Alerts Dashboard")
-5. Set role to **Viewer**
-6. Set expiration as needed
-7. Click **Add** and copy the generated key
-8. Paste the key into your `backend/.env` file
-
-## Running the Application
-
-### Development Mode
-
-Run both backend and frontend concurrently:
-
-**Option 1: Separate Terminals**
-```bash
-# Terminal 1 - Backend
-npm run backend
-
-# Terminal 2 - Frontend
-npm run frontend
-```
-
-**Option 2: Using VS Code Tasks**
-- Press `Cmd+Shift+B` (Mac) or `Ctrl+Shift+B` (Windows/Linux)
-- Select "Run Backend and Frontend"
-
-### Access the Dashboard
-
-- **Frontend**: http://localhost:5173
-- **Backend**: http://localhost:3001
-- **WebSocket**: ws://localhost:3001
-
-### Production Build
-
-Build both applications:
-```bash
-npm run build
-```
-
-This creates:
-- `backend/dist/` - Compiled NestJS application
-- `frontend/dist/` - Static frontend assets
-
-Run production backend:
-```bash
-cd backend
-npm run start:prod
-```
-
-Serve frontend with any static file server (nginx, Apache, etc.)
-
-## Features in Detail
-
-### Real-time WebSocket Updates
-
-The backend polls Grafana API every 30 seconds and pushes updates to all connected clients via WebSocket. No manual refresh needed!
-
-### Alert States
-
-Alerts are displayed with color coding:
-- **Red** - Alerting (critical)
-- **Orange** - Pending
-- **Green** - OK
-- **Gray** - Paused
-- **Blue** - No Data
-
-### Wall Screen Optimization
-
-- Large, readable fonts
-- High contrast color scheme
-- Auto-scaling grid layout
-- Duration tracking for each alert
-- Real-time connection status indicator
-
-## API Reference
-
-### WebSocket Events
-
-**Client → Server**
-- `getAlerts` - Request current alerts
-
-**Server → Client**
-- `alerts` - Alert data update (array of GrafanaAlert)
-- `error` - Error message
-
-### Grafana Alert Object
-
-```typescript
-interface GrafanaAlert {
-  id: number
-  name: string
-  state: 'ok' | 'paused' | 'alerting' | 'pending' | 'no_data'
-  newStateDate: string
-  evalDate: string
-  url: string
-}
-```
-
-## Troubleshooting
-
-### Backend won't start
-- Check if `.env` file exists and contains valid Grafana credentials
-- Verify Grafana URL is accessible
-- Ensure port 3001 is not in use
-
-### Frontend can't connect to backend
-- Verify backend is running on http://localhost:3001
-- Check CORS settings in `backend/src/main.ts`
-- Verify `VITE_BACKEND_URL` in `frontend/.env` (if set)
-
-### No alerts showing
-- Verify Grafana API key has correct permissions
-- Check if Grafana instance has any alerts configured
-- Look at backend logs for API errors
-
-### WebSocket connection issues
-- Check firewall/network settings
-- Verify WebSocket protocol is not blocked
-- Check browser console for connection errors
-
-## Development
-
-### Adding New Features
-
-**Backend (NestJS)**
-- Add new services in `backend/src/alerts/`
-- Modify WebSocket gateway in `alerts.gateway.ts`
-- Update Grafana service for new API endpoints
-
-**Frontend (Vue 3)**
-- Add new components in `frontend/src/components/`
-- Modify main dashboard in `App.vue`
-- Add PrimeVue components as needed
-
-### Code Style
-
-Both projects use TypeScript with ESLint and Prettier:
-
-```bash
-# Backend
-cd backend
-npm run lint
-
-# Frontend
-cd frontend
-npm run lint
-```
 
 ## License
 
