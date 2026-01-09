@@ -24,4 +24,19 @@ export class AlertsController {
 
     return this.grafanaService.getAnnotations(id, instanceName);
   }
+
+  @Get('silences/:silenceId')
+  async getSilence(
+    @Query('instanceName') instanceName: string,
+    @Query('silenceId') silenceId: string
+  ) {
+    if (!silenceId) {
+      throw new BadRequestException('silenceId query parameter is required');
+    }
+    if (!instanceName) {
+      throw new BadRequestException('instanceName query parameter is required');
+    }
+
+    return this.grafanaService.getSilenceById(silenceId, instanceName);
+  }
 }

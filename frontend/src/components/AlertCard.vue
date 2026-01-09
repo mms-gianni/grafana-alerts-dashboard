@@ -60,6 +60,12 @@
         annotation-class="annotation-item"
       />
     </div>
+    
+    <SilenceAccordion
+      v-if="expanded && alert.isSilencedBy && alert.isSilencedBy.length > 0"
+      :silence-ids="alert.isSilencedBy"
+      :instance-name="alert.instanceName || 'default'"
+    />
 
     <div class="alert-footer">
       <a :href="alert.url" target="_blank" class="view-link">
@@ -73,6 +79,7 @@
 <script setup lang="ts">
 import { ref, computed, toRef, watch } from 'vue'
 import SubAlertAccordion from './SubAlertAccordion.vue'
+import SilenceAccordion from './SilenceRow.vue'
 import { useAlert, type GrafanaAlert } from '../composables/useAlert'
 
 interface Props {

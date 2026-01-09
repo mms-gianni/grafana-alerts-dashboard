@@ -45,6 +45,13 @@
       :instance-name="alert.instanceName"
     />
     
+    
+    <SilenceAccordion
+      v-if="expanded && alert.isSilencedBy && alert.isSilencedBy.length > 0"
+      :silence-ids="alert.isSilencedBy"
+      :instance-name="alert.instanceName || 'default'"
+      class="silence-container"
+    />
     <div v-if="expanded && filteredSubAlerts.length > 0" class="sub-alerts-container">
       <SubAlertAccordion 
         :sub-alerts="filteredSubAlerts"
@@ -64,6 +71,7 @@
 import { ref, computed, toRef, watch } from 'vue'
 import SubAlertAccordion from './SubAlertAccordion.vue'
 import AlertTimeline from './AlertTimeline.vue'
+import SilenceAccordion from './SilenceRow.vue'
 import { useAlert, type GrafanaAlert } from '../composables/useAlert'
 
 interface Props {
@@ -315,6 +323,12 @@ const toggleAccordion = () => {
 }
 
 .sub-alerts-container {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  margin-bottom: 1px;
+}
+
+.silence-container {
   background: rgba(0, 0, 0, 0.2);
   padding: 1rem;
   margin-bottom: 1px;

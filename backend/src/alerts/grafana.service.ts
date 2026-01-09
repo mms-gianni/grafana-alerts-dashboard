@@ -43,6 +43,7 @@ export interface DisplayAlert {
   };
   annotations: Record<string, string>;
   isSilenced?: boolean;
+  isSilencedBy?: string[];
   instanceName?: string;
 }
 
@@ -252,6 +253,7 @@ export class GrafanaService {
           const displayAlert = this.transformAlertToDisplay(alert, instance.name, instance.url, prometheusRule);
           // Check if alert is silenced from alertmanager data
           displayAlert.isSilenced = alertmanagerAlert?.status?.silencedBy?.length > 0 || false;
+          displayAlert.isSilencedBy = alertmanagerAlert?.status?.silencedBy || [];
           return displayAlert;
         });
       } catch (error) {
@@ -484,6 +486,33 @@ export class GrafanaService {
         `Failed to fetch annotations for alert ${alertId} from ${instance.name}: ${error.message}`
       );
       return [];
+    }
+  }
+
+  async getSilenceById(silenceId: string, instanceName: string): Promise<GrafanaSilence | null> {
+    // Find the specific instance
+    const instance = this.instances.find(inst => inst.name === instanceName);
+    if (!instance) {
+      this.logger.warn(`Instance '${instanceName}' not found`);
+      return null;
+    }
+
+    const endpoint = `/api/alertmanager/grafana/api/v2/silence/${silenceId}`;
+    const fullUrl = `${instance.url}${endpoint}`;
+
+    try {
+      this.logger.debug(`Fetching silence ${silenceId} from ${instance.name}: ${fullUrl}`);
+      const response = await instance.axiosInstance.get(endpoint);
+      this.logger.log(`Successfully fetched silence ${silenceId} from ${instance.name}`);
+      return response.data;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to fetch silence ${silenceId} from ${instance.name}\n` +
+        `  URL: ${fullUrl}\n` +
+        `  Status: ${error.response?.status || 'N/A'}\n` +
+        `  Error Message: ${error.message}`
+      );
+      return null;
     }
   }
 }

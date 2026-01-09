@@ -19,6 +19,7 @@ export interface GrafanaAlert {
   labels?: Record<string, string>
   instanceName?: string
   isSilenced?: boolean
+  isSilencedBy?: string[]
   totals?: {
     alerting: number
     normal: number
