@@ -198,6 +198,19 @@
         </div>
       </div>
 
+      <div class="drawer-section github-link-section">
+        <a 
+          href="https://github.com/mms-gianni/grafana-alerts-dashboard" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="github-link"
+          title="View on GitHub"
+        >
+          <i class="pi pi-github"></i>
+          <span>View on GitHub</span>
+        </a>
+      </div>
+
     </div>
   </Sidebar>
 </template>
@@ -539,5 +552,36 @@ const handleSoundChange = (event: Event) => {
   background: #64b5f6;
   cursor: pointer;
   border: none;
+}
+
+.github-link-section {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.github-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #ccc;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.github-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.github-link i {
+  font-size: 1.25rem;
 }
 </style>

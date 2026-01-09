@@ -3,14 +3,14 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - main
-      - master
+  #   - main
+  #   - master
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - main
-      - master
+  #pull_request:
+  #  branches:
+  #    - main
+  #    - master
 
 env:
   REGISTRY: ghcr.io
