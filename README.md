@@ -23,13 +23,13 @@ The application uses **distroless images** for minimal attack surface and smalle
 
 1. Getting a Grafana API Key
 
-   1. Log in to your Grafana instance
-   2. Go to **Configuration** → **API Keys**
-   3. Click **Add API key**
-   4. Set a name (e.g., "Alerts Dashboard")
-   5. Set role to **Viewer**
-   6. Set expiration as needed
-   7. Click **Add** and copy the generated key
+   - Log in to your Grafana instance
+   - Go to **Configuration** → **API Keys**
+   - Click **Add API key**
+   - Set a name (e.g., "Alerts Dashboard")
+   - Set role to **Viewer**
+   - Set expiration as needed
+   - Click **Add** and copy the generated key
 
 2. **Copy environment file**:
    ```bash
