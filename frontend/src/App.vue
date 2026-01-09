@@ -50,6 +50,23 @@
         </div>
       </div>
       <div class="header-controls">
+        <div class="search-section" :class="{ 'search-open': showSearch }">
+          <input 
+            v-if="showSearch"
+            v-model="searchQuery"
+            type="text"
+            class="search-input"
+            placeholder="Search alerts by title..."
+            @keyup.escape="showSearch = false; searchQuery = ''"
+          />
+          <button 
+            class="drawer-toggle-btn"
+            @click="toggleSearch"
+            :title="showSearch ? 'Close search' : 'Search alerts'"
+          >
+            <i :class="['pi', showSearch ? 'pi-times' : 'pi-search']"></i>
+          </button>
+        </div>
         <div class="connection-status">
           <div class="status-line">
             <i :class="['pi', connectionStatus.connected ? 'pi-check-circle' : 'pi-times-circle']"></i>
@@ -238,6 +255,8 @@ const highlightDuration = ref(savedSettings.highlightDuration)
 const notificationSound = ref(savedSettings.notificationSound)
 const notificationVolume = ref(savedSettings.notificationVolume)
 const notificationAudio = ref<HTMLAudioElement | null>(null)
+const searchQuery = ref('')
+const showSearch = ref(false)
 
 const systemPrefersDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 
@@ -254,6 +273,13 @@ const effectiveTheme = computed(() => {
 })
 
 let socket: Socket | null = null
+
+const toggleSearch = () => {
+  showSearch.value = !showSearch.value
+  if (!showSearch.value) {
+    searchQuery.value = ''
+  }
+}
 
 const refreshAlerts = () => {
   if (socket && connectionStatus.value.connected) {
@@ -313,6 +339,11 @@ const sortedAlerts = computed(() => {
         const [key, value] = selectedLabel.split(':')
         return alert.labels![key] === value
       })
+    })
+    .filter(alert => {
+      // Filter by search query (case-insensitive title search)
+      if (!searchQuery.value.trim()) return true
+      return alert.name.toLowerCase().includes(searchQuery.value.toLowerCase())
     })
     .sort((a, b) => {
       const aOrder = stateOrder[a.state] ?? 99
@@ -505,6 +536,21 @@ onUnmounted(() => {
   color: #1a1a1a;
 }
 
+.dashboard.theme-light .search-input {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+  color: #1a1a1a;
+}
+
+.dashboard.theme-light .search-input:focus {
+  border-color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.dashboard.theme-light .search-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
 .dashboard.theme-light .loading,
 .dashboard.theme-light .error-message,
 .dashboard.theme-light .no-alerts {
@@ -537,6 +583,33 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 2rem;
+}
+
+.search-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-input {
+  padding: 0.5rem 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+  width: 250px;
+}
+
+.search-input:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .drawer-toggle-btn {
