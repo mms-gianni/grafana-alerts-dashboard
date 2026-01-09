@@ -81,12 +81,20 @@ const fetchAnnotations = async () => {
 }
 
 const timelineSegments = computed((): TimelineSegment[] => {
-  if (annotations.value.length === 0) {
-    return []
-  }
-
   const now = Date.now()
   const startTime = now - TWENTY_FOUR_HOURS
+  
+  // If no annotations, show a green (Normal/OK) timeline for the entire 24h
+  if (annotations.value.length === 0) {
+    return [{
+      state: 'Normal',
+      start: startTime,
+      end: now,
+      duration: TWENTY_FOUR_HOURS,
+      percentage: 100
+    }]
+  }
+
   const segments: TimelineSegment[] = []
 
   // Sort annotations by time
