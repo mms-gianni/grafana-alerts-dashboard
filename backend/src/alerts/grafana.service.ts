@@ -457,11 +457,13 @@ export class GrafanaService {
   async getAnnotations(alertId: number): Promise<any[]> {
     // Try to fetch annotations from all instances and combine them
     const allAnnotations: any[] = [];
+    const from = Date.now() - 24 * 60 * 60 * 1000; // 1 day ago
+    const to = Date.now();
 
     for (const instance of this.instances) {
       try {
         const response = await instance.axiosInstance.get(
-          `/api/annotations?alertId=${alertId}`
+          `/api/annotations?alertId=${alertId}&type=alert&from=${from}`
         );
         
         if (response.data && Array.isArray(response.data)) {
