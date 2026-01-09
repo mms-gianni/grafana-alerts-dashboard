@@ -148,6 +148,7 @@ import AlertRow from './components/AlertRow.vue'
 import SettingsSidebar from './components/SettingsSidebar.vue'
 import { io, Socket } from 'socket.io-client'
 import type { GrafanaAlert } from './composables/useAlert'
+import { getFallbackDefaults, type AppSettings } from './config/settings'
 
 // Cookie utility functions
 const setCookie = (name: string, value: string, days: number = 365) => {
@@ -167,17 +168,35 @@ const getCookie = (name: string): string | null => {
   return null
 }
 
-const loadSettings = () => {
+// Backend default settings (received via WebSocket)
+const backendDefaults = ref<AppSettings | null>(null)
+
+const loadSettings = (defaults: AppSettings = getFallbackDefaults()) => {
   try {
     const saved = getCookie('alertsSettings')
     if (saved) {
-      const settings = JSON.parse(decodeURIComponent(saved))
-      return settings
+      const cookieSettings = JSON.parse(decodeURIComponent(saved))
+      // Cookie always takes precedence over defaults
+      return { ...defaults, ...cookieSettings }
     }
   } catch (e) {
     console.error('Failed to load settings from cookie:', e)
   }
-  return null
+  // Return backend defaults (or fallback if backend not available yet)
+  return defaults
+}
+
+const applySettings = (settings: AppSettings) => {
+  viewMode.value = settings.viewMode
+  selectedStates.value = settings.selectedStates
+  selectedInstances.value = settings.selectedInstances
+  selectedLabels.value = settings.selectedLabels
+  fontSize.value = settings.fontSize
+  theme.value = settings.theme
+  showNormalSubalerts.value = settings.showNormalSubalerts
+  highlightDuration.value = settings.highlightDuration
+  notificationSound.value = settings.notificationSound
+  notificationVolume.value = settings.notificationVolume
 }
 
 const saveSettings = () => {
@@ -196,7 +215,7 @@ const saveSettings = () => {
   setCookie('alertsSettings', encodeURIComponent(JSON.stringify(settings)))
 }
 
-// Load saved settings
+// Load saved settings with fallback defaults
 const savedSettings = loadSettings()
 
 const alerts = ref<GrafanaAlert[]>([])
@@ -206,18 +225,18 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const lastUpdate = ref('Never')
 const connectionStatus = ref({ connected: false, text: 'Connecting...' })
-const viewMode = ref<'compact' | 'grid'>(savedSettings?.viewMode || 'compact')
-const selectedStates = ref<string[]>(savedSettings?.selectedStates || ['alerting', 'pending', 'no_data', 'paused', 'silenced', 'ok'])
-const selectedInstances = ref<string[]>(savedSettings?.selectedInstances || [])
-const selectedLabels = ref<string[]>(savedSettings?.selectedLabels || [])
-const fontSize = ref(savedSettings?.fontSize || 2)
+const viewMode = ref<'compact' | 'grid'>(savedSettings.viewMode)
+const selectedStates = ref<string[]>(savedSettings.selectedStates)
+const selectedInstances = ref<string[]>(savedSettings.selectedInstances)
+const selectedLabels = ref<string[]>(savedSettings.selectedLabels)
+const fontSize = ref(savedSettings.fontSize)
 const showSidebar = ref(false)
 const refreshing = ref(false)
-const theme = ref<'light' | 'system' | 'dark'>(savedSettings?.theme || 'dark')
-const showNormalSubalerts = ref(savedSettings?.showNormalSubalerts ?? false)
-const highlightDuration = ref(savedSettings?.highlightDuration ?? 10)
-const notificationSound = ref(savedSettings?.notificationSound ?? 'notification-1.mp3')
-const notificationVolume = ref(savedSettings?.notificationVolume ?? 0.5)
+const theme = ref<'light' | 'system' | 'dark'>(savedSettings.theme)
+const showNormalSubalerts = ref(savedSettings.showNormalSubalerts)
+const highlightDuration = ref(savedSettings.highlightDuration)
+const notificationSound = ref(savedSettings.notificationSound)
+const notificationVolume = ref(savedSettings.notificationVolume)
 const notificationAudio = ref<HTMLAudioElement | null>(null)
 
 const systemPrefersDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -360,6 +379,18 @@ onMounted(() => {
 
   socket.on('disconnect', () => {
     connectionStatus.value = { connected: false, text: 'Disconnected' }
+  })
+
+  socket.on('defaultSettings', (settings: AppSettings) => {
+    console.log('Received default settings from backend:', settings)
+    backendDefaults.value = settings
+    
+    // Only apply if no cookie exists (first-time user)
+    const hasCookie = getCookie('alertsSettings')
+    if (!hasCookie) {
+      console.log('No cookie found, applying backend defaults')
+      applySettings(loadSettings(settings))
+    }
   })
 
   socket.on('alerts', (data: GrafanaAlert[]) => {

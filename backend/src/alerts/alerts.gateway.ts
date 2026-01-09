@@ -10,6 +10,7 @@ import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { DisplayAlert } from './grafana.service';
 import { AlertsService } from './alerts.service';
+import { getDefaultSettings } from '../config/default-settings';
 
 @WebSocketGateway({
   cors: {
@@ -35,6 +36,8 @@ export class AlertsGateway
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+    // Send default settings to newly connected client
+    this.sendDefaultSettings(client);
     // Send current alerts to newly connected client
     this.sendInitialAlerts(client);
   }
@@ -53,12 +56,22 @@ export class AlertsGateway
     }
   }
 
+  @SubscribeMessage('getSettings')
+  handleGetSettings(client: Socket) {
+    this.sendDefaultSettings(client);
+  }
+
   broadcastAlerts(alerts: DisplayAlert[]) {
     this.server.emit('alerts', alerts);
   }
 
   broadcastError(message: string) {
     this.server.emit('error', { message });
+  }
+
+  private sendDefaultSettings(client: Socket) {
+    const settings = getDefaultSettings();
+    client.emit('defaultSettings', settings);
   }
 
   private async sendInitialAlerts(client: Socket) {

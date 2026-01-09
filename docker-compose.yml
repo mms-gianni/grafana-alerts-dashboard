@@ -8,7 +8,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - GRAFANA_INSTANCES=${GRAFANA_INSTANCES}
+    env_file:
+      - .env
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/"]
