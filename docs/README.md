@@ -1,10 +1,11 @@
 # Screenshots
 
+### Dark Theme
 ![Grafana Alerts Dashboard Screenshot](./screenshot.png)
-<br><br><br>
+### Light Theme
 ![Grafana Alerts Dashboard Screenshot](./screenshot-light.png)
-<br><br><br>
+### Alert Card View
 ![Grafana Alerts Dashboard Screenshot](./screenshot-card.png)
-<br><br><br>
+### Settings Page
 ![Grafana Alerts Dashboard Screenshot](./screenshot-settings.png)
 <br><br><br>
