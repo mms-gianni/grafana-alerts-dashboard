@@ -453,4 +453,34 @@ export class GrafanaService {
     }
     throw new Error(`Alert ${uid} not found in any Grafana instance`);
   }
+
+  async getAnnotations(alertId: number): Promise<any[]> {
+    // Try to fetch annotations from all instances and combine them
+    const allAnnotations: any[] = [];
+
+    for (const instance of this.instances) {
+      try {
+        const response = await instance.axiosInstance.get(
+          `/api/annotations?alertId=${alertId}`
+        );
+        
+        if (response.data && Array.isArray(response.data)) {
+          // Add instance name to each annotation for reference
+          const annotationsWithInstance = response.data.map(ann => ({
+            ...ann,
+            instanceName: instance.name
+          }));
+          allAnnotations.push(...annotationsWithInstance);
+        }
+      } catch (error) {
+        // Log but continue to try other instances
+        this.logger.warn(
+          `Failed to fetch annotations for alert ${alertId} from ${instance.name}: ${error.message}`
+        );
+      }
+    }
+
+    // Sort by time (newest first)
+    return allAnnotations.sort((a, b) => b.time - a.time);
+  }
 }

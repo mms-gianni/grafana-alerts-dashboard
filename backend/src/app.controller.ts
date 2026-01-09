@@ -1,5 +1,5 @@
-import { Controller, Get, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get, Res, Req, Next } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
 import { join } from 'path';
 
 @Controller()
@@ -11,7 +11,11 @@ export class AppController {
 
   // Catch-all route for SPA - serve index.html for all non-API routes
   @Get('*')
-  serveSPA(@Res() res: Response) {
+  serveSPA(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction) {
+    // Skip for API routes - let them 404 properly
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
     res.sendFile(join(__dirname, '..', 'public', 'index.html'));
   }
 }

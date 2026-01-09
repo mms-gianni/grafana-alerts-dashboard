@@ -39,6 +39,11 @@
       </div>
     </div>
     
+    <AlertTimeline 
+      v-if="expanded" 
+      :alert-id="alert.id" 
+    />
+    
     <div v-if="expanded && filteredSubAlerts.length > 0" class="sub-alerts-container">
       <SubAlertAccordion 
         :sub-alerts="filteredSubAlerts"
@@ -57,6 +62,7 @@
 <script setup lang="ts">
 import { ref, computed, toRef, watch } from 'vue'
 import SubAlertAccordion from './SubAlertAccordion.vue'
+import AlertTimeline from './AlertTimeline.vue'
 import { useAlert, type GrafanaAlert } from '../composables/useAlert'
 
 interface Props {
