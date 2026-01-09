@@ -866,5 +866,73 @@ onUnmounted(() => {
 .theme-light .alert-footer {
   border-top-color: rgba(0, 0, 0, 0.12);
 }
+
+/* Light theme for PrimeVue Accordion (subalerts) */
+.theme-light .p-accordion .p-accordion-header .p-accordion-header-link {
+  background: #d4d4d4;
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.theme-light .p-accordion .p-accordion-header:not(.p-disabled) .p-accordion-header-link:hover {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+.theme-light .p-accordion .p-accordion-header:not(.p-highlight):not(.p-disabled):hover .p-accordion-header-link {
+  background: #f5f5f5;
+}
+
+.theme-light .p-accordion .p-accordion-header:not(.p-disabled).p-highlight .p-accordion-header-link {
+  background: #f0f0f0;
+  color: #1a1a1a;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.theme-light .p-accordion .p-accordion-content {
+  background: #d4d4d4;
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-top: 0;
+}
+
+/* Light theme for subalert content */
+.theme-light .sub-alert-content {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.theme-light .sub-alert-value {
+  color: #555;
+}
+
+.theme-light .annotation-item,
+.theme-light .annotation-row {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.theme-light .annotation-key {
+  color: #555;
+}
+
+.theme-light .annotation-value {
+  color: #1a1a1a;
+}
+
+/* Light theme for timeline */
+.theme-light .timeline-container {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.theme-light .timeline-bar {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.theme-light .timeline-labels {
+  color: #666;
+}
+
+.theme-light .timeline-loading {
+  color: #666;
+}
 </style>
 

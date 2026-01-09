@@ -163,7 +163,7 @@ onMounted(() => {
 <style scoped>
 .timeline-container {
   padding: 0.75rem 1.5rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.08);
   margin-bottom: 1px;
 }
 
