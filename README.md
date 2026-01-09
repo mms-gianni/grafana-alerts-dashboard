@@ -3,7 +3,9 @@
 Alternative dashboard for Grafana alerts optimized for wall screen displays. Built with NestJS backend, Vue 3 + Vite frontend, and PrimeVue UI components with real-time WebSocket updates.
 
 
-![Grafana Alerts Dashboard Screenshot](./screenshot.gif)
+![Grafana Alerts Dashboard Screenshot](./docs/screenshot.gif)
+
+More screenshots in [docs/README.md](./docs/README.md)
 
 ## Features
 
