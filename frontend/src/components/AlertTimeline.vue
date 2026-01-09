@@ -43,6 +43,7 @@ interface TimelineSegment {
 
 interface Props {
   alertId: number
+  instanceName?: string
 }
 
 const props = defineProps<Props>()
@@ -58,7 +59,12 @@ const fetchAnnotations = async () => {
   error.value = null
   
   try {
-    const response = await fetch(`/api/annotations?alertId=${props.alertId}`)
+    if (!props.instanceName) {
+      error.value = 'Instance name is required'
+      loading.value = false
+      return
+    }
+    const response = await fetch(`/api/annotations?alertId=${props.alertId}&instanceName=${encodeURIComponent(props.instanceName)}`)
     
     if (!response.ok) {
       throw new Error('Failed to fetch annotations')

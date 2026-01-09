@@ -41,7 +41,8 @@
     
     <AlertTimeline 
       v-if="expanded" 
-      :alert-id="alert.id" 
+      :alert-id="alert.id"
+      :instance-name="alert.instanceName"
     />
     
     <div v-if="expanded && filteredSubAlerts.length > 0" class="sub-alerts-container">

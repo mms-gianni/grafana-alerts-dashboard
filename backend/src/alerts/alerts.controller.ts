@@ -6,9 +6,15 @@ export class AlertsController {
   constructor(private readonly grafanaService: GrafanaService) {}
 
   @Get('annotations')
-  async getAnnotations(@Query('alertId') alertId: string) {
+  async getAnnotations(
+    @Query('alertId') alertId: string,
+    @Query('instanceName') instanceName: string
+  ) {
     if (!alertId) {
       throw new BadRequestException('alertId query parameter is required');
+    }
+    if (!instanceName) {
+      throw new BadRequestException('instanceName query parameter is required');
     }
 
     const id = parseInt(alertId, 10);
@@ -16,6 +22,6 @@ export class AlertsController {
       throw new BadRequestException('alertId must be a valid number');
     }
 
-    return this.grafanaService.getAnnotations(id);
+    return this.grafanaService.getAnnotations(id, instanceName);
   }
 }
