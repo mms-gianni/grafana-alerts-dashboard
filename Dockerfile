@@ -24,7 +24,8 @@ WORKDIR /app/frontend
 RUN yarn build
 
 # Production stage - pure Node.js
-FROM node:20-alpine
+#FROM node:20-alpine
+FROM gcr.io/distroless/nodejs20-debian12
 
 WORKDIR /app
 
@@ -40,4 +41,5 @@ COPY --from=builder /app/frontend/dist ./public
 EXPOSE 3001
 
 # Start Node.js backend (serves both API and static frontend)
-CMD ["node", "dist/main.js"]
+#CMD ["node", "dist/main.js"]
+CMD ["dist/main.js"]
