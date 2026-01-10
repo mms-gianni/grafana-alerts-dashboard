@@ -1,4 +1,22 @@
+
+
+<p align="center">
+  <img src="frontend/public/logo.svg" alt="Grafana Alerts Dashboard Logo" width="150" height="150">
+</p>
+
 # Grafana Alerts Dashboard
+
+<p>
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg" alt="Node Version">
+  <img src="https://img.shields.io/badge/Docker-supported-blue.svg" alt="Docker">
+  <!--
+  <img src="https://img.shields.io/badge/TypeScript-5.x-blue.svg" alt="TypeScript">
+  <img src="https://img.shields.io/badge/NestJS-10.x-red.svg" alt="NestJS">
+  <img src="https://img.shields.io/badge/Vue.js-3.x-green.svg" alt="Vue 3">
+  <img src="https://img.shields.io/badge/WebSocket-Socket.io-black.svg" alt="WebSocket">
+  -->
+</p>
 
 Alternative dashboard for Grafana alerts optimized for wall screen displays. Built with NestJS backend, Vue 3 + Vite frontend, and PrimeVue UI components with real-time WebSocket updates.
 
