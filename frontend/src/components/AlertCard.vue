@@ -67,7 +67,7 @@
       :instance-name="alert.instanceName || 'default'"
     />
 
-    <div class="alert-footer">
+    <div v-if="!isWallDisplayMode" class="alert-footer">
       <a :href="alert.url" target="_blank" class="view-link">
         <i class="pi pi-external-link"></i>
         View in Grafana
@@ -87,12 +87,14 @@ interface Props {
   fontSize?: number
   showNormalSubalerts?: boolean
   isNew?: boolean
+  isWallDisplayMode?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   fontSize: 2,
   showNormalSubalerts: false,
-  isNew: false
+  isNew: false,
+  isWallDisplayMode: false
 })
 
 watch(() => props.isNew, (newVal) => {

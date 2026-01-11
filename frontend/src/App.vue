@@ -49,7 +49,7 @@
           </div>
         </div>
       </div>
-      <div class="header-controls">
+      <div v-if="!isWallDisplayMode" class="header-controls">
         <div class="search-section" :class="{ 'search-open': showSearch }">
           <input 
             v-if="showSearch"
@@ -125,14 +125,14 @@
       </div>
 
       <div v-else-if="viewMode === 'compact'" class="alerts-compact">
-        <div class="compact-header">
+        <div :class="['compact-header', { 'kiosk-mode': isWallDisplayMode }]">
           <div class="header-icon"></div>
           <div class="header-name">Alert Name</div>
           <div class="header-group">Rule Group</div>
           <div class="header-totals">Alerts</div>
           <div class="header-labels">Labels</div>
           <div class="header-duration">Duration</div>
-          <div class="header-actions"></div>
+          <div v-if="!isWallDisplayMode" class="header-actions"></div>
         </div>
         <AlertRow
           v-for="alert in sortedAlerts"
@@ -141,6 +141,7 @@
           :fontSize="fontSize"
           :showNormalSubalerts="showNormalSubalerts"
           :isNew="highlightDuration > 0 && newAlertIds.has(alert.id)"
+          :isWallDisplayMode="isWallDisplayMode"
         />
       </div>
 
@@ -151,6 +152,7 @@
           :alert="alert"
           :fontSize="fontSize"
           :showNormalSubalerts="showNormalSubalerts"
+          :isWallDisplayMode="isWallDisplayMode"
           :isNew="highlightDuration > 0 && newAlertIds.has(alert.id)"
         />
       </div>
@@ -166,6 +168,7 @@ import SettingsSidebar from './components/SettingsSidebar.vue'
 import { io, Socket } from 'socket.io-client'
 import type { GrafanaAlert } from './composables/useAlert'
 import { getFallbackDefaults, type AppSettings } from './config/settings'
+import { useFullscreenDetection } from './composables/useFullscreenDetection'
 
 // Cookie utility functions
 const setCookie = (name: string, value: string, days: number = 365) => {
@@ -257,6 +260,8 @@ const notificationVolume = ref(savedSettings.notificationVolume)
 const notificationAudio = ref<HTMLAudioElement | null>(null)
 const searchQuery = ref('')
 const showSearch = ref(false)
+
+const { isWallDisplayMode } = useFullscreenDetection()
 
 const systemPrefersDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 
@@ -719,6 +724,10 @@ onUnmounted(() => {
   color: #aaa;
   gap: 1rem;
   margin-bottom: 1px;
+}
+
+.compact-header.kiosk-mode {
+  grid-template-columns: 50px 1fr 200px 80px 300px 100px;
 }
 
 .compact-header > div {

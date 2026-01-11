@@ -32,7 +32,7 @@
       <div class="alert-duration">
         {{ getDuration(alert.newStateDate) }}
       </div>
-      <div class="alert-actions">
+      <div v-if="!isWallDisplayMode" class="alert-actions">
         <a :href="alert.url" target="_blank" class="view-link" title="View in Grafana" @click.stop>
           <i class="pi pi-external-link"></i>
         </a>
@@ -79,12 +79,14 @@ interface Props {
   fontSize?: number
   showNormalSubalerts?: boolean
   isNew?: boolean
+  isWallDisplayMode?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   fontSize: 2,
   showNormalSubalerts: false,
-  isNew: false
+  isNew: false,
+  isWallDisplayMode: false
 })
 
 watch(() => props.isNew, (newVal) => {
@@ -120,6 +122,12 @@ const toggleAccordion = () => {
   margin-bottom: 1px;
   transition: background 0.2s, transform 0.1s;
   gap: 1rem;
+}
+
+/* Remove actions column in kiosk mode */
+.alert-row:has(.alert-actions:empty),
+.alert-row:not(:has(.alert-actions)) {
+  grid-template-columns: 50px 1fr 200px 80px 300px 100px;
 }
 
 .alert-row:hover {
