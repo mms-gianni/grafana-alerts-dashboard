@@ -115,19 +115,16 @@
           />
         </div>        <div class="sound-control">
           <label for="notification-sound" class="control-label">Notification Sound</label>
-          <select 
+          <Select
             id="notification-sound"
-            :value="notificationSound"
-            @change="handleSoundChange"
+            :modelValue="notificationSound"
+            @update:modelValue="handleSoundChange"
+            :options="soundOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select a sound"
             class="sound-select"
-          >
-            <option value="">None</option>
-            <option value="notification-1.mp3">Sound 1</option>
-            <option value="notification-2.mp3">Sound 2</option>
-            <option value="notification-3.mp3">Sound 3</option>
-            <option value="notification-4.mp3">Sound 4</option>
-            <option value="notification-5.mp3">Sound 5</option>
-          </select>
+          />
         </div>
         <div class="volume-control">
           <div class="duration-label">
@@ -220,6 +217,7 @@ import { computed } from 'vue'
 import Sidebar from 'primevue/sidebar'
 import MultiSelect from 'primevue/multiselect'
 import InputSwitch from 'primevue/inputswitch'
+import Select from 'primevue/select'
 
 interface Props {
   visible: boolean
@@ -267,8 +265,16 @@ const stateOptions = [
   { label: 'OK', value: 'ok', icon: 'pi pi-check-circle', color: '#4caf50' },
 ]
 
-const handleSoundChange = (event: Event) => {
-  const newSound = (event.target as HTMLSelectElement).value
+const soundOptions = [
+  { label: 'None', value: '' },
+  { label: 'Sound 1', value: 'notification-1.mp3' },
+  { label: 'Sound 2', value: 'notification-2.mp3' },
+  { label: 'Sound 3', value: 'notification-3.mp3' },
+  { label: 'Sound 4', value: 'notification-4.mp3' },
+  { label: 'Sound 5', value: 'notification-5.mp3' },
+]
+
+const handleSoundChange = (newSound: string) => {
   emit('update:notificationSound', newSound)
   
   // Play preview of selected sound
@@ -583,5 +589,350 @@ const handleSoundChange = (event: Event) => {
 
 .github-link i {
   font-size: 1.25rem;
+}
+</style>
+<style>
+/* Dark theme sidebar styles - non-scoped for portaled sidebar */
+body:has(.theme-dark) .p-sidebar,
+body:has(.theme-dark) .p-drawer {
+  --p-drawer-background: #0f0f1a !important;
+  --p-sidebar-background: #0f0f1a !important;
+  --p-overlay-modal-background: #0f0f1a !important;
+  --p-drawer-border-color: rgba(255, 255, 255, 0.1) !important;
+  --p-overlay-modal-border-color: rgba(255, 255, 255, 0.1) !important;
+  --p-drawer-color: #ffffff !important;
+  --p-overlay-modal-color: #ffffff !important;
+  background: #0f0f1a !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+body:has(.theme-dark) .p-sidebar-header {
+  background: #0f0f1a !important;
+  color: #fff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+body:has(.theme-dark) .p-sidebar-header-content {
+  color: #fff !important;
+}
+
+body:has(.theme-dark) .p-sidebar-close-icon {
+  color: #fff !important;
+}
+
+/* Dark mode form components */
+body:has(.theme-dark) .p-multiselect,
+body:has(.theme-dark) .p-select,
+body:has(.theme-dark) .p-inputtext {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+body:has(.theme-dark) .p-multiselect:hover,
+body:has(.theme-dark) .p-select:hover,
+body:has(.theme-dark) .p-inputtext:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+body:has(.theme-dark) .p-multiselect-overlay,
+body:has(.theme-dark) .p-select-overlay,
+body:has(.theme-dark) .p-multiselect-panel {
+  background: #1a1a2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+body:has(.theme-dark) .p-overlay,
+body:has(.theme-dark) .p-component-overlay {
+  background: #1a1a2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+body:has(.theme-dark) .p-multiselect-list,
+body:has(.theme-dark) .p-select-list {
+  background: #1a1a2e !important;
+  color: #fff !important;
+}
+
+body:has(.theme-dark) .p-multiselect-header {
+  background: #1a1a2e !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+body:has(.theme-dark) .p-multiselect-filter {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+body:has(.theme-dark) .p-multiselect-item,
+body:has(.theme-dark) .p-select-option {
+  color: #fff !important;
+  background: transparent !important;
+}
+
+body:has(.theme-dark) .p-multiselect-option,
+body:has(.theme-dark) .p-select-item {
+  color: #fff !important;
+  background: transparent !important;
+}
+
+body:has(.theme-dark) .p-multiselect-item:hover,
+body:has(.theme-dark) .p-select-option:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+body:has(.theme-dark) .p-multiselect-option:hover,
+body:has(.theme-dark) .p-select-item:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+body:has(.theme-dark) .p-multiselect-item.p-focus,
+body:has(.theme-dark) .p-select-option.p-focus {
+  background: rgba(100, 181, 246, 0.25) !important;
+}
+
+body:has(.theme-dark) .p-multiselect-option.p-focus,
+body:has(.theme-dark) .p-select-item.p-focus {
+  background: rgba(100, 181, 246, 0.25) !important;
+}
+
+body:has(.theme-dark) .p-multiselect-label,
+body:has(.theme-dark) .p-select-label {
+  color: #fff !important;
+}
+
+body:has(.theme-dark) .p-multiselect-dropdown,
+body:has(.theme-dark) .p-select-dropdown {
+  color: #fff !important;
+}
+
+body:has(.theme-dark) .p-checkbox-box {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+body:has(.theme-dark) .p-checkbox-box:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+body:has(.theme-dark) .p-checkbox-box.p-checked {
+  background: #64b5f6 !important;
+  border-color: #64b5f6 !important;
+}
+
+/* Light theme form components */
+body:has(.theme-light) .p-sidebar,
+body:has(.theme-light) .p-drawer {
+  --p-drawer-background: #ffffff !important;
+  --p-sidebar-background: #ffffff !important;
+  --p-overlay-modal-background: #ffffff !important;
+  --p-drawer-border-color: rgba(0, 0, 0, 0.12) !important;
+  --p-overlay-modal-border-color: rgba(0, 0, 0, 0.12) !important;
+  --p-drawer-color: #1a1a1a !important;
+  --p-overlay-modal-color: #1a1a1a !important;
+  background: #ffffff !important;
+  border-left: 1px solid rgba(0, 0, 0, 0.12) !important;
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .p-sidebar-header {
+  background: #f8f9fa !important;
+  color: #1a1a1a !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+body:has(.theme-light) .p-sidebar-header-content {
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .p-sidebar-close-icon {
+  color: #1a1a1a !important;
+}
+
+/* Light mode form components */
+body:has(.theme-light) .p-multiselect,
+body:has(.theme-light) .p-select,
+body:has(.theme-light) .p-inputtext {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .p-multiselect:hover,
+body:has(.theme-light) .p-select:hover,
+body:has(.theme-light) .p-inputtext:hover {
+  border-color: #9ca3af !important;
+  background: #ededed !important;
+}
+
+b
+
+body:has(.theme-light) .p-overlay,
+body:has(.theme-light) .p-component-overlay {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+body:has(.theme-light) .p-multiselect-list,
+body:has(.theme-light) .p-select-list {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+}ody:has(.theme-light) .p-multiselect-overlay,
+body:has(.theme-light) .p-select-overlay,
+body:has(.theme-light) .p-multiselect-panel {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #1a1a1a !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+body:has(.theme-light) .p-multiselect-header {
+  background: #f9fafb !important;
+  background: transparent !important;
+}
+
+body:has(.theme-light) .p-multiselect-option,
+body:has(.theme-light) .p-select-item {
+  color: #1a1a1a !important;
+  background: transparent !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .p-multiselect-filter {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .p-multiselect-item,
+body:has(.theme-light) .p-select-option {
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .p-multiselect-item:hover,
+body:has(.theme-light) .p-select-option:hover {
+  background: #e5e7eb !important;
+}
+
+body:has(.theme-light) .p-multiselect-option:hover,
+body:has(.theme-light) .p-select-item:hover {
+  background: #e5e7eb !important;
+}
+
+body:has(.theme-light) .p-multiselect-item.p-focus,
+body:has(.theme-light) .p-select-option.p-focus {
+  background: #dbeafe !important;
+}
+
+body:has(.theme-light) .p-multiselect-option.p-focus,
+body:has(.theme-light) .p-select-item.p-focus {
+  background: #dbeafe !important;
+}
+
+body:has(.theme-light) .p-multiselect-label,
+body:has(.theme-light) .p-select-label {
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .p-multiselect-dropdown,
+body:has(.theme-light) .p-select-dropdown {
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .p-checkbox-box,
+body:has(.theme-light) .p-toggleswitch-input {
+  background: #4c7bb1 !important;
+  border-color: #4c7bb1 !important;
+}
+
+body:has(.theme-light) .p-checkbox-box:hover,
+body:has(.theme-light) .p-toggleswitch-input:hover {
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+}
+
+body:has(.theme-light) .p-checkbox-box.p-checked {
+  background: #0a4a93 !important;
+  border-color: #0a4a93 !important;
+}
+
+body:has(.theme-light) .drawer-content {
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .drawer-section-title {
+  color: #2d2d2d !important;
+  font-weight: 700 !important;
+}
+
+body:has(.theme-light) .switch-label span,
+body:has(.theme-light) .control-label,
+body:has(.theme-light) .duration-label {
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .duration-value {
+  color: #1565c0 !important;
+  font-weight: 700 !important;
+}
+
+body:has(.theme-light) .size-control i {
+  color: #555 !important;
+}
+
+body:has(.theme-light) .sound-select {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.25) !important;
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .sound-select:hover {
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+body:has(.theme-light) .sound-select option {
+  background: #fff !important;
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .github-link {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .github-link:hover {
+  background: rgba(0, 0, 0, 0.14) !important;
+  color: #000 !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+body:has(.theme-light) .github-link-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
+}
+
+body:has(.theme-light) .toggle-btn {
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: #555 !important;
+  border: 1px solid transparent !important;
+}
+
+body:has(.theme-light) .toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+  color: #1a1a1a !important;
+}
+
+body:has(.theme-light) .toggle-btn.active {
+  background: rgba(100, 181, 246, 0.15) !important;
+  color: #1565c0 !important;
+  border: 1px solid rgba(100, 181, 246, 0.4) !important;
 }
 </style>

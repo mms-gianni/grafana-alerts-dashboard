@@ -949,33 +949,46 @@ onUnmounted(() => {
   border-top-color: rgba(0, 0, 0, 0.12);
 }
 
-/* Light theme for PrimeVue Accordion (subalerts) */
-.theme-light .p-accordion .p-accordion-header .p-accordion-header-link {
-  background: #d4d4d4;
-  color: #1a1a1a;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+/* PrimeVue Accordion styling for dark theme */
+.theme-dark .p-accordion-header-link {
+  background: var(--p-surface-800) !important;
+  color: var(--p-text-color) !important;
+  border-color: var(--p-surface-border) !important;
 }
 
-.theme-light .p-accordion .p-accordion-header:not(.p-disabled) .p-accordion-header-link:hover {
-  background: #f5f5f5;
-  color: #1a1a1a;
+.theme-dark .p-accordion-header:not(.p-disabled) .p-accordion-header-link:hover {
+  background: var(--p-surface-700) !important;
 }
 
-.theme-light .p-accordion .p-accordion-header:not(.p-highlight):not(.p-disabled):hover .p-accordion-header-link {
-  background: #f5f5f5;
+.theme-dark .p-accordion-header:not(.p-disabled).p-highlight .p-accordion-header-link {
+  background: var(--p-surface-700) !important;
 }
 
-.theme-light .p-accordion .p-accordion-header:not(.p-disabled).p-highlight .p-accordion-header-link {
-  background: #f0f0f0;
-  color: #1a1a1a;
-  border-color: rgba(0, 0, 0, 0.12);
+.theme-dark .p-accordion-content {
+  background: var(--p-surface-900) !important;
+  color: var(--p-text-color) !important;
+  border-color: var(--p-surface-border) !important;
 }
 
-.theme-light .p-accordion .p-accordion-content {
-  background: #d4d4d4;
-  color: #1a1a1a;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-top: 0;
+/* PrimeVue Accordion styling for light theme */
+.theme-light .p-accordion-header-link {
+  background: var(--p-surface-50) !important;
+  color: var(--p-text-color) !important;
+  border-color: var(--p-surface-border) !important;
+}
+
+.theme-light .p-accordion-header:not(.p-disabled) .p-accordion-header-link:hover {
+  background: var(--p-surface-100) !important;
+}
+
+.theme-light .p-accordion-header:not(.p-disabled).p-highlight .p-accordion-header-link {
+  background: var(--p-surface-100) !important;
+}
+
+.theme-light .p-accordion-content {
+  background: var(--p-surface-0) !important;
+  color: var(--p-text-color) !important;
+  border-color: var(--p-surface-border) !important;
 }
 
 /* Light theme for subalert content */

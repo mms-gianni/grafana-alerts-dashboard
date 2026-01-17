@@ -331,7 +331,7 @@ const toggleAccordion = () => {
 }
 
 .sub-alerts-container {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.05);
   padding: 1rem;
   margin-bottom: 1px;
 }
@@ -384,5 +384,19 @@ const toggleAccordion = () => {
   .alert-duration {
     display: none;
   }
+}
+
+</style>
+<style>
+.p-accordionheader {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+.p-accordionheader:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.p-accordioncontent-content {
+  background-color: transparent !important;
 }
 </style>
