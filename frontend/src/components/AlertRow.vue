@@ -389,12 +389,12 @@ const toggleAccordion = () => {
 </style>
 <style>
 .p-accordionheader {
-  background-color: transparent;
+  background-color: transparent !important;
+  color: inherit !important;
 }
 .p-accordionheader:hover {
   background-color: rgba(255, 255, 255, 0.05) !important;
 }
-
 
 .p-accordioncontent-content {
   background-color: transparent !important;
