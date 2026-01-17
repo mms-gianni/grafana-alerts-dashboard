@@ -115,19 +115,16 @@
           />
         </div>        <div class="sound-control">
           <label for="notification-sound" class="control-label">Notification Sound</label>
-          <select 
+          <Select
             id="notification-sound"
-            :value="notificationSound"
-            @change="handleSoundChange"
+            :modelValue="notificationSound"
+            @update:modelValue="handleSoundChange"
+            :options="soundOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select a sound"
             class="sound-select"
-          >
-            <option value="">None</option>
-            <option value="notification-1.mp3">Sound 1</option>
-            <option value="notification-2.mp3">Sound 2</option>
-            <option value="notification-3.mp3">Sound 3</option>
-            <option value="notification-4.mp3">Sound 4</option>
-            <option value="notification-5.mp3">Sound 5</option>
-          </select>
+          />
         </div>
         <div class="volume-control">
           <div class="duration-label">
@@ -220,6 +217,7 @@ import { computed } from 'vue'
 import Sidebar from 'primevue/sidebar'
 import MultiSelect from 'primevue/multiselect'
 import InputSwitch from 'primevue/inputswitch'
+import Select from 'primevue/select'
 
 interface Props {
   visible: boolean
@@ -267,8 +265,16 @@ const stateOptions = [
   { label: 'OK', value: 'ok', icon: 'pi pi-check-circle', color: '#4caf50' },
 ]
 
-const handleSoundChange = (event: Event) => {
-  const newSound = (event.target as HTMLSelectElement).value
+const soundOptions = [
+  { label: 'None', value: '' },
+  { label: 'Sound 1', value: 'notification-1.mp3' },
+  { label: 'Sound 2', value: 'notification-2.mp3' },
+  { label: 'Sound 3', value: 'notification-3.mp3' },
+  { label: 'Sound 4', value: 'notification-4.mp3' },
+  { label: 'Sound 5', value: 'notification-5.mp3' },
+]
+
+const handleSoundChange = (newSound: string) => {
   emit('update:notificationSound', newSound)
   
   // Play preview of selected sound
