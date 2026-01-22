@@ -1,0 +1,106 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "UTC",
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "assigneesFromCodeOwners": true,
+  "reviewersFromCodeOwners": true,
+  "dependencyDashboard": true,
+  "packageRules": [
+    {
+      "description": "Group all non-major dependencies together",
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
+    {
+      "description": "Group NestJS packages",
+      "matchPackagePatterns": [
+        "^@nestjs/"
+      ],
+      "groupName": "NestJS packages",
+      "groupSlug": "nestjs"
+    },
+    {
+      "description": "Group Vue packages",
+      "matchPackagePatterns": [
+        "^vue",
+        "^@vue/"
+      ],
+      "groupName": "Vue packages",
+      "groupSlug": "vue"
+    },
+    {
+      "description": "Group PrimeVue packages",
+      "matchPackagePatterns": [
+        "^primevue",
+        "^primeicons"
+      ],
+      "groupName": "PrimeVue packages",
+      "groupSlug": "primevue"
+    },
+    {
+      "description": "Group TypeScript packages",
+      "matchPackagePatterns": [
+        "^typescript",
+        "^@types/"
+      ],
+      "groupName": "TypeScript packages",
+      "groupSlug": "typescript"
+    },
+    {
+      "description": "Auto-merge dev dependencies (non-major)",
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Separate major updates",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "labels": [
+        "dependencies",
+        "major-update"
+      ]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": [
+      "security"
+    ],
+    "assignees": [
+      "@mms-gianni"
+    ]
+  },
+  "npm": {
+    "minimumReleaseAge": "3 days"
+  },
+  "prConcurrentLimit": 10,
+  "prCreation": "immediate",
+  "prHourlyLimit": 0,
+  "rangeStrategy": "bump",
+  "semanticCommits": "enabled",
+  "commitMessagePrefix": "chore(deps):",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 6am on monday"
+    ]
+  }
+}
