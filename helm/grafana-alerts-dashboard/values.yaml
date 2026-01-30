@@ -1,8 +1,8 @@
 # Default values for grafana-alerts-dashboard
 
 image:
-  repository: grafana-alerts-dashboard
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/mms-gianni/grafana-alerts-dashboard
+  pullPolicy: Always
   tag: 
 
 imagePullSecrets: []
