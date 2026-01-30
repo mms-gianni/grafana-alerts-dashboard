@@ -1,5 +1,4 @@
 # Default values for grafana-alerts-dashboard
-replicaCount: 1
 
 image:
   repository: grafana-alerts-dashboard
@@ -58,13 +57,6 @@ resources:
     cpu: 250m
     memory: 256Mi
 
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 3
-  targetCPUUtilizationPercentage: 80
-  targetMemoryUtilizationPercentage: 80
-
 nodeSelector: {}
 
 tolerations: []
@@ -103,11 +95,3 @@ readinessProbe:
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 3
-
-# Persistence for logs or data (optional)
-persistence:
-  enabled: false
-  storageClass: ""
-  accessMode: ReadWriteOnce
-  size: 1Gi
-  mountPath: /app/data
