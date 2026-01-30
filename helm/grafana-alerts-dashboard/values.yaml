@@ -68,14 +68,11 @@ env:
   NODE_ENV: production
   PORT: "3001"
   CORS_ORIGIN: "*"
-  # Add your Grafana-specific environment variables here
-  # GRAFANA_URL: "http://grafana:3000"
-  # GRAFANA_API_KEY: ""
 
-# Additional environment variables from secrets
-envFrom: []
-  # - secretRef:
-  #     name: grafana-alerts-secrets
+secrets:
+  create: false
+  name: ""
+  GRAFANA_INSTANCES: '[]'  # JSON string of Grafana instances
 
 # Probes configuration
 livenessProbe:

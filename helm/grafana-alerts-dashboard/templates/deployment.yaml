@@ -31,10 +31,9 @@ spec:
     - name: {{ $key }}
       value: {{ $value | quote }}
     {{- end }}
-    {{- with .Values.envFrom }}
     envFrom:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
+    - secretRef:
+        name: {{ .Values.secrets.name | default (include "grafana-alerts-dashboard.fullname" .) }}
     livenessProbe:
       {{- toYaml .Values.livenessProbe | nindent 6 }}
     readinessProbe:
