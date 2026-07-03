@@ -358,15 +358,9 @@ const sortedAlerts = computed(() => {
       if (aOrder !== bOrder) {
         return aOrder - bOrder
       }
-      
-      // Secondary sort: by alert name (alphabetically)
-      const nameCompare = a.name.localeCompare(b.name)
-      if (nameCompare !== 0) {
-        return nameCompare
-      }
-      
-      // Tertiary sort: by state date (oldest first for consistency)
-      return new Date(a.newStateDate).getTime() - new Date(b.newStateDate).getTime()
+
+      // Secondary sort: by age (newest first)
+      return new Date(b.newStateDate).getTime() - new Date(a.newStateDate).getTime()
     })
 
   return filtered
